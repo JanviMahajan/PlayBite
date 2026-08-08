@@ -347,6 +347,7 @@ class QRRegenerateView(LoginRequiredMixin, OwnerRequiredMixin, View):
 
 from django.views.decorators.http import require_GET
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 from django.utils import timezone
@@ -354,6 +355,7 @@ from django.views import View
 from django.http import JsonResponse
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class PlayWelcomeView(View):
     """Public customer-facing welcome/play entry. Validates QR and creates a temporary session."""
     def get(self, request, qr_slug):
@@ -464,16 +466,22 @@ class PlayStartView(View):
                 {'slug': 'fruit-slice', 'name': 'Fruit Slice Challenge', 'description': 'Slice fruits, avoid bombs.', 'duration': 30},
             ]
         selected = random.choice(available)
+        selected_payload = {
+            **selected,
+            'duration': int(selected['duration'].total_seconds())
+            if hasattr(selected['duration'], 'total_seconds')
+            else int(selected['duration']),
+        }
 
         # store selected game in session
         play_session = request.session.get('play_session', {})
-        play_session['selected_game'] = selected
+        play_session['selected_game'] = selected_payload
         request.session['play_session'] = play_session
         request.session.modified = True
 
         # Return JSON with challenge info and a redirect URL for the Start Game button
-        game_url = f"/games/{selected['slug']}/?session={play_session.get('session_id')}"
-        return JsonResponse({'game': selected, 'start_url': game_url})
+        game_url = f"/games/{selected_payload['slug']}/?session={play_session.get('session_id')}"
+        return JsonResponse({'game': selected_payload, 'start_url': game_url})
 
 
 # Keep backward-compatible name for top-level import used in playbite.urls earlier
