@@ -1,0 +1,32 @@
+<ul class="nav flex-column gap-1 px-1">
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'restaurants:dashboard' %}">Dashboard</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/restaurant/' in request.path %}active{% endif %}" href="{% url 'restaurants:restaurant_profile' %}">Restaurant Profile</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/branches' in request.path %}active{% endif %}" href="{% url 'restaurants:branch_list' %}">Branches</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/tables' in request.path %}active{% endif %}" href="{% url 'restaurants:table_list' %}">Tables</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/qr' in request.path %}active{% endif %}" href="{% url 'restaurants:qr_list' %}">QR Codes</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/rewards' in request.path %}active{% endif %}" href="{% url 'coupons:reward_list' %}">Rewards</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/analytics' in request.path %}active{% endif %}" href="{% url 'analytics:dashboard' %}">Analytics</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/dashboard/rewards/coupons' in request.path %}active{% endif %}" href="{% url 'coupons:coupon_list' %}">Coupons</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link rounded-3 {% if '/staff/' in request.path %}active{% endif %}" href="{% url 'coupons_staff:staff_portal' %}">Staff portal</a>
+  </li>
+  <li class="nav-item mt-3 pt-2 border-top">
+    <a class="nav-link rounded-3 text-danger" href="{% url 'accounts:logout' %}">Logout</a>
+  </li>
+</ul>

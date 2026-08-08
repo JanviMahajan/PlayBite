@@ -1,0 +1,11 @@
+{% extends 'base_clean.html' %}
+{% block title %}Invalid QR | PlayBite{% endblock %}
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="card shadow-sm mx-auto p-4" style="max-width:560px;">
+    <h3>Invalid or Inactive QR Code</h3>
+    <p class="text-muted">The QR code you scanned is invalid, expired, or the restaurant/table is not active. Please ask the staff for help.</p>
+    <a href="/" class="btn btn-outline-primary">Return to home</a>
+  </div>
+</div>
+{% endblock %}

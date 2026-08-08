@@ -1,0 +1,94 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Analytics | PlayBite{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/analytics.css">
+<style>
+.kpi-card{border-radius:12px;padding:18px}
+.charts-row{margin-top:20px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center">
+    <h3>Analytics</h3>
+    <div>
+      <label class="me-2">Range</label>
+      <input id="start" type="date" value="{{ start_date }}"> - <input id="end" type="date" value="{{ end_date }}">
+      <button id="applyRange" class="btn btn-sm btn-primary">Apply</button>
+      <a id="exportCsv" class="btn btn-sm btn-outline-secondary" href="#">Export CSV</a>
+    </div>
+  </div>
+
+  <div class="row mt-3 g-3" id="kpiRow">
+    <div class="col-sm-6 col-md-3">
+      <div class="card kpi-card">
+        <h6>Total QR Scans</h6>
+        <div id="kpi_total_qr_scans" class="h3">—</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card kpi-card">
+        <h6>Unique Customers</h6>
+        <div id="kpi_unique_customers" class="h3">—</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card kpi-card">
+        <h6>Games Played</h6>
+        <div id="kpi_games_played" class="h3">—</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-md-3">
+      <div class="card kpi-card">
+        <h6>Coupons Redeemed</h6>
+        <div id="kpi_coupons_redeemed" class="h3">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row charts-row">
+    <div class="col-md-8">
+      <div class="card p-3">
+        <h6>Daily QR Scans</h6>
+        <canvas id="chart_daily_scans"></canvas>
+      </div>
+      <div class="card p-3 mt-3">
+        <h6>Daily Games Played</h6>
+        <canvas id="chart_daily_games"></canvas>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3">
+        <h6>Most Popular Games</h6>
+        <canvas id="chart_popular_games"></canvas>
+      </div>
+      <div class="card p-3 mt-3">
+        <h6>Device Breakdown</h6>
+        <canvas id="chart_device_breakdown"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/analytics/dashboard.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const start = document.getElementById('start');
+    const end = document.getElementById('end');
+    const apply = document.getElementById('applyRange');
+    const exportCsv = document.getElementById('exportCsv');
+    function applyRange(){
+      const s = start.value; const e = end.value;
+      window.analyticsLoad({start: s, end: e});
+      exportCsv.href = `/dashboard/analytics/export/?start=${s}&end=${e}`;
+    }
+    apply.addEventListener('click', applyRange);
+    // initial load
+    window.analyticsLoad({start: start.value, end: end.value});
+    exportCsv.href = `/dashboard/analytics/export/?start=${start.value}&end=${end.value}`;
+  });
+</script>
+{% endblock %}

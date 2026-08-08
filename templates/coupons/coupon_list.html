@@ -1,0 +1,34 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Coupons | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <h3>Coupons</h3>
+      {% if coupons %}
+        <div class="table-responsive">
+          <table class="table">
+            <thead><tr><th>Code</th><th>Reward</th><th>Customer</th><th>Status</th><th>Valid From</th><th>Expiry</th></tr></thead>
+            <tbody>
+              {% for c in coupons %}
+                <tr>
+                  <td>{{ c.coupon_code }}</td>
+                  <td>{{ c.reward.title }}</td>
+                  <td>{{ c.customer.full_name }}</td>
+                  <td>{{ c.get_status_display }}</td>
+                  <td>{{ c.valid_from }}</td>
+                  <td>{{ c.expiry_at }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="alert alert-info">No coupons generated yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

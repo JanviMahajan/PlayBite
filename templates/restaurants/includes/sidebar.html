@@ -1,0 +1,15 @@
+<aside class="col-lg-2 col-md-3 d-none d-md-block dashboard-sidebar border-end" aria-label="Dashboard navigation">
+  <div class="position-sticky top-0 pt-3 pb-4">
+    {% include 'restaurants/includes/sidebar_nav.html' %}
+  </div>
+</aside>
+
+<div class="offcanvas offcanvas-start dashboard-offcanvas" tabindex="-1" id="dashboardSidebar" aria-labelledby="dashboardSidebarLabel">
+  <div class="offcanvas-header border-bottom">
+    <h2 class="offcanvas-title h5 mb-0" id="dashboardSidebarLabel">Menu</h2>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close menu"></button>
+  </div>
+  <div class="offcanvas-body pt-0">
+    {% include 'restaurants/includes/sidebar_nav.html' %}
+  </div>
+</div>

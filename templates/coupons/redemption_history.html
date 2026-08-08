@@ -1,0 +1,39 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Redemption History | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <h3>Redemption History</h3>
+      <form method="get" class="mb-3 d-flex gap-2">
+        <input name="q" class="form-control" placeholder="Search by code" value="{{ request.GET.q }}" />
+        <button class="btn btn-outline-secondary">Search</button>
+      </form>
+      {% if redemptions %}
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead><tr><th>Time</th><th>Coupon</th><th>Customer</th><th>Reward</th><th>Branch</th><th>By</th></tr></thead>
+            <tbody>
+              {% for r in redemptions %}
+                <tr>
+                  <td>{{ r.redeemed_at }}</td>
+                  <td>{{ r.coupon.coupon_code }}</td>
+                  <td>{{ r.coupon.customer.full_name }}</td>
+                  <td>{{ r.coupon.reward.title }}</td>
+                  <td>{{ r.branch }}</td>
+                  <td>{{ r.redeemed_by.get_full_name }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <nav>{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>
+      {% else %}
+        <div class="alert alert-info">No redemptions yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

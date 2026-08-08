@@ -1,0 +1,59 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Branches | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <div class="d-flex justify-content-between mb-3">
+        <h3>Branches</h3>
+        <a href="{% url 'restaurants:branch_create' %}" class="btn btn-warning text-white">Create Branch</a>
+      </div>
+
+      <form method="get" class="mb-3">
+        <div class="input-group">
+          <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search branches..." />
+          <button class="btn btn-outline-secondary" type="submit">Search</button>
+        </div>
+      </form>
+
+      {% if branches %}
+        <div class="row g-3">
+          {% for branch in branches %}
+            <div class="col-md-6 col-lg-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-body">
+                  <h5 class="card-title">{{ branch.branch_name }}</h5>
+                  <p class="card-text">{{ branch.address }}<br>{{ branch.city }}{% if branch.phone %}<br>Phone: {{ branch.phone }}{% endif %}</p>
+                  <div class="d-flex justify-content-between">
+                    <a href="{% url 'restaurants:branch_edit' branch.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <form method="post" action="{% url 'restaurants:branch_delete' branch.pk %}" onsubmit="return confirm('Delete this branch?');">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <nav class="mt-4">
+          <ul class="pagination">
+            {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% else %}
+        <div class="alert alert-info">No branches yet. Create one to get started.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

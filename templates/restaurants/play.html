@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Play | PlayBite{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-8 text-center">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3>Welcome to {{ table.branch.restaurant.restaurant_name }}</h3>
+        <p class="lead">Branch: {{ table.branch.branch_name }} — Table {{ table.table_number }}</p>
+        <p class="text-muted">This is a placeholder play page. Gameplay will be available here soon.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Dashboard | PlayBite{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-5" style="background: #fff8f0;">
+        <h1 class="h3 mb-3">Owner dashboard</h1>
+        <p class="lead text-muted">Welcome back, {{ request.user.full_name }}. Your restaurant owner dashboard is coming soon.</p>
+        <div class="mt-4">
+          <a class="btn btn-warning btn-lg text-white" href="{% url 'accounts:logout' %}">Logout</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

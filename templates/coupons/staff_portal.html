@@ -1,0 +1,32 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Staff Portal | PlayBite{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h3>Staff Portal</h3>
+  <div class="d-flex gap-2 my-3">
+    <a href="{% url 'coupons_staff:staff_scan' %}" class="btn btn-primary">Scan QR</a>
+    <a href="{% url 'coupons_staff:staff_manual' %}" class="btn btn-outline-primary">Manual Code</a>
+    <a href="{% url 'coupons_staff:redemption_history' %}" class="btn btn-outline-secondary">Redemption History</a>
+  </div>
+  <div class="row">
+    <div class="col-md-3">
+      <div class="card p-3">
+        <h5>Today's Redemptions</h5>
+        <p class="h3">{{ today_redemptions|default:0 }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3">
+        <h5>Active Coupons</h5>
+        <p class="h3">{{ active_coupons|default:0 }}</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card p-3">
+        <h5>Pending</h5>
+        <p class="h3">{{ pending_coupons|default:0 }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

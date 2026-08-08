@@ -1,0 +1,153 @@
+.game-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--pb-bg);
+}
+
+.game-top {
+  background: var(--pb-surface);
+  border-bottom: 1px solid var(--pb-border);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.game-logo {
+  width: clamp(40px, 10vw, 48px);
+  height: clamp(40px, 10vw, 48px);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.game-logo.placeholder {
+  width: clamp(40px, 10vw, 48px);
+  height: clamp(40px, 10vw, 48px);
+  background: var(--pb-accent);
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.game-restaurant {
+  min-width: 0;
+}
+
+.game-restaurant .fw-bold {
+  font-size: clamp(0.9rem, 3.5vw, 1rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(50vw, 220px);
+}
+
+.game-controls {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.game-controls .btn {
+  min-height: 2.5rem;
+  touch-action: manipulation;
+}
+
+.game-area {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: linear-gradient(180deg, var(--pb-surface), var(--pb-bg));
+  padding: clamp(0.5rem, 2vw, 1rem);
+}
+
+#game-root {
+  width: 100%;
+  max-width: min(960px, 100%);
+  margin-inline: auto;
+}
+
+.game-canvas-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #111;
+  touch-action: none;
+}
+
+.game-canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  max-height: min(65dvh, 520px);
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(72px, 22vw), 1fr));
+  gap: clamp(6px, 2vw, 12px);
+  max-width: 520px;
+  margin-inline: auto;
+}
+
+.memory-card {
+  background: var(--pb-surface);
+  border-radius: 0.65rem;
+  min-height: clamp(64px, 18vw, 88px);
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--pb-border);
+  padding: 0;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.memory-card:focus-visible {
+  outline: 3px solid var(--pb-primary);
+  outline-offset: 2px;
+}
+
+.memory-card .face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.memory-card .back {
+  background: rgba(247, 181, 0, 0.25);
+}
+
+.memory-card:not(.flipped) .front {
+  visibility: hidden;
+}
+
+.memory-card.flipped .back {
+  visibility: hidden;
+}
+
+.game-result {
+  animation: fadeInUp 0.35s ease both;
+}
+
+@media (max-width: 575.98px) {
+  .game-top {
+    padding-inline: 0.75rem !important;
+  }
+
+  .game-controls .small {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .memory-card {
+    min-height: 72px;
+  }
+}

@@ -1,0 +1,20 @@
+{% extends 'base_clean.html' %}
+{% block title %}Redemption Result | PlayBite{% endblock %}
+{% block content %}
+<div class="container py-4 text-center">
+  {% if redemption and redemption.redeemed_at %}
+    <div class="card p-4 shadow-lg">
+      <h2 class="text-success">Redeemed</h2>
+      <p class="lead">Coupon {{ redemption.coupon.coupon_code }} redeemed by {{ redemption.redeemed_by.get_full_name }}</p>
+      <p>At {{ redemption.redeemed_at }} — Branch: {{ redemption.branch }}</p>
+      <a href="{% url 'coupons_staff:staff_portal' %}" class="btn btn-link mt-3">Back</a>
+    </div>
+  {% else %}
+    <div class="card p-4 shadow-lg">
+      <h2 class="text-danger">Not Redeemed</h2>
+      <p class="text-muted">{{ redemption.reason }}</p>
+      <a href="{% url 'coupons_staff:staff_portal' %}" class="btn btn-link mt-3">Back</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

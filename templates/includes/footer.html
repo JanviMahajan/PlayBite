@@ -1,0 +1,26 @@
+<footer class="site-footer py-4 mt-auto">
+  <div class="container-fluid container-lg px-3">
+    <div class="row g-4 text-center text-md-start">
+      <div class="col-md-6">
+        <p class="fw-semibold mb-2 text-body">PlayBite</p>
+        <p class="small mb-0">QR-driven customer engagement for restaurants and cafés.</p>
+      </div>
+      <div class="col-md-3">
+        <p class="fw-semibold mb-2 text-body">Product</p>
+        <ul class="list-unstyled small mb-0">
+          <li><a class="text-decoration-none text-muted" href="{% url 'marketing:home' %}#features">Features</a></li>
+          <li><a class="text-decoration-none text-muted" href="{% url 'accounts:register' %}">Get started</a></li>
+        </ul>
+      </div>
+      <div class="col-md-3">
+        <p class="fw-semibold mb-2 text-body">Account</p>
+        <ul class="list-unstyled small mb-0">
+          <li><a class="text-decoration-none text-muted" href="{% url 'accounts:login' %}">Login</a></li>
+          <li><a class="text-decoration-none text-muted" href="{% url 'accounts:register' %}">Register</a></li>
+        </ul>
+      </div>
+    </div>
+    <hr class="my-3 border-secondary-subtle" />
+    <p class="text-center small text-muted mb-0">&copy; {% now "Y" %} PlayBite. Built for modern hospitality.</p>
+  </div>
+</footer>

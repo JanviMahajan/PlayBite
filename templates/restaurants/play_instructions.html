@@ -1,0 +1,18 @@
+{% extends 'base_clean.html' %}
+{% load static %}
+{% block title %}Instructions | {{ restaurant.restaurant_name }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/play.css' %}">{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <a href="/play/{{ qr_slug }}/" class="btn btn-link">← Back</a>
+  <div class="card shadow-sm p-3">
+    <h4>How to Play</h4>
+    <ul>
+      <li>Play a short friendly challenge tailored for your table.</li>
+      <li>Win rewards based on your performance.</li>
+      <li>Coupons will be generated for winners and are redeemable at the restaurant.</li>
+      <li>Be kind and enjoy!</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

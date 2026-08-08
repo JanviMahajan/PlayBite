@@ -1,0 +1,53 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}QR Codes | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <div class="d-flex justify-content-between mb-3">
+        <h3>QR Management</h3>
+        <a href="{% url 'restaurants:table_create' %}" class="btn btn-warning text-white">Create Table (Auto-generate QR)</a>
+      </div>
+
+      {% if tables %}
+        <div class="row g-3">
+          {% for t in tables %}
+            <div class="col-md-6 col-lg-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <h5>{{ t.branch.branch_name }} — Table {{ t.table_number }}</h5>
+                  <p class="small text-muted">Created: {{ t.created }}</p>
+                  <p>QR Status: {% if t.qr_image %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Pending</span>{% endif %}</p>
+                  <div class="d-flex justify-content-between mt-3">
+                    <a href="{% url 'restaurants:qr_detail' t.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                    <a href="{% url 'restaurants:qr_download_png' t.pk %}" class="btn btn-sm btn-outline-primary">Download PNG</a>
+                    <a href="{% url 'restaurants:qr_download_pdf' t.pk %}" class="btn btn-sm btn-outline-primary">Download PDF</a>
+                    <form method="post" action="{% url 'restaurants:qr_regenerate' t.pk %}" onsubmit="return confirm('Regenerate QR? This will invalidate old codes.');">{% csrf_token %}<button class="btn btn-sm btn-danger">Regenerate</button></form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <nav class="mt-4">
+          <ul class="pagination">
+            {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% else %}
+        <div class="alert alert-info">No tables / QR codes found. Add a table to generate one.</div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

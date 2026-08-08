@@ -1,0 +1,209 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Dashboard | PlayBite{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+      <h1 class="h3 mb-1">Dashboard</h1>
+      <p class="text-muted mb-0 small">Overview of tables, games, and rewards</p>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+      <div class="card shadow-sm h-100 stat-card">
+        <div class="card-body">
+          <h6 class="text-muted">Total Tables</h6>
+          <h3 class="mb-0">{{ stats.total_tables }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card shadow-sm h-100 stat-card">
+        <div class="card-body">
+          <h6 class="text-muted">Active Branches</h6>
+          <h3 class="mb-0">{{ stats.active_branches }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card shadow-sm h-100 stat-card">
+        <div class="card-body">
+          <h6 class="text-muted">Total Rewards</h6>
+          <h3 class="mb-0">{{ stats.total_rewards }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="card shadow-sm h-100 stat-card">
+        <div class="card-body">
+          <h6 class="text-muted">Games Played Today</h6>
+          <h3 class="mb-0">{{ stats.games_played_today }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="card shadow-sm chart-card is-loading h-100">
+        <div class="card-body">
+          <h2 class="h5">Daily Plays</h2>
+          <div class="skeleton skeleton-chart chart-skeleton" aria-hidden="true"></div>
+          <div class="ratio ratio-16x9 ratio-md-21x9">
+            <canvas id="chartDailyPlays" role="img" aria-label="Daily plays chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5">
+      <div class="row g-3">
+        <div class="col-12">
+          <div class="card shadow-sm chart-card is-loading">
+            <div class="card-body">
+              <h2 class="h6">Weekly QR Scans</h2>
+              <div class="skeleton skeleton-chart chart-skeleton" aria-hidden="true"></div>
+              <div class="ratio ratio-21x9">
+                <canvas id="chartWeeklyQr" aria-label="Weekly QR scans chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card shadow-sm chart-card is-loading">
+            <div class="card-body">
+              <h2 class="h6">Coupon Redemption Rate</h2>
+              <div class="skeleton skeleton-chart chart-skeleton" aria-hidden="true"></div>
+              <div class="ratio ratio-21x9">
+                <canvas id="chartCoupon" aria-label="Coupon redemption chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm chart-card is-loading">
+        <div class="card-body">
+          <h2 class="h6">Most Popular Games</h2>
+          <div class="skeleton skeleton-chart chart-skeleton" aria-hidden="true"></div>
+          <div class="ratio ratio-1x1">
+            <canvas id="chartPopularGames" aria-label="Popular games chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm chart-card is-loading">
+        <div class="card-body">
+          <h2 class="h6">Peak Hours</h2>
+          <div class="skeleton skeleton-chart chart-skeleton" aria-hidden="true"></div>
+          <div class="ratio ratio-21x9">
+            <canvas id="chartPeakHours" aria-label="Peak hours chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h2 class="h6">Quick Actions</h2>
+          <div class="d-grid gap-2">
+            <button class="btn btn-warning" type="button" disabled>Generate QR Codes <small class="opacity-75">(Coming Soon)</small></button>
+            <a href="{% url 'coupons:reward_create' %}" class="btn btn-outline-secondary">Create Reward</a>
+            <a href="{% url 'restaurants:table_list' %}" class="btn btn-outline-secondary">Manage Tables</a>
+            <a href="{% url 'coupons_staff:staff_portal' %}" class="btn btn-outline-secondary">Redeem Coupons</a>
+            <a href="{% url 'analytics:dashboard' %}" class="btn btn-outline-secondary">View Analytics</a>
+          </div>
+        </div>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="h6">Summary</h2>
+          <ul class="list-unstyled mb-0 small">
+            <li class="d-flex justify-content-between py-1"><span>Total Tables</span><strong>{{ stats.total_tables }}</strong></li>
+            <li class="d-flex justify-content-between py-1"><span>Active Branches</span><strong>{{ stats.active_branches }}</strong></li>
+            <li class="d-flex justify-content-between py-1"><span>Coupons Redeemed</span><strong>{{ stats.coupons_redeemed }}</strong></li>
+            <li class="d-flex justify-content-between py-1"><span>Returning Customers</span><strong>{{ stats.returning_customers }}</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <h2 class="h6 mb-0">Recent Activity</h2>
+            <small class="text-muted">Recent interactions</small>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-stack align-middle mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Time</th>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Game</th>
+                  <th scope="col">Reward</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for act in activity_page.object_list %}
+                  <tr>
+                    <td>{{ act.time }}</td>
+                    <td>{{ act.customer }}</td>
+                    <td>{{ act.game }}</td>
+                    <td>{{ act.reward }}</td>
+                    <td>
+                      {% if act.status == 'Delivered' or act.status == 'Redeemed' %}
+                        <span class="badge bg-success">{{ act.status }}</span>
+                      {% elif act.status == 'Pending' %}
+                        <span class="badge bg-warning text-dark">{{ act.status }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ act.status }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <nav class="mt-3" aria-label="Activity pagination">
+            <ul class="pagination justify-content-center justify-content-md-end flex-wrap mb-0">
+              {% if activity_page.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ activity_page.previous_page_number }}">Previous</a></li>
+              {% endif %}
+              <li class="page-item disabled"><span class="page-link">Page {{ activity_page.number }} of {{ activity_page.paginator.num_pages }}</span></li>
+              {% if activity_page.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ activity_page.next_page_number }}">Next</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.__DASHBOARD_CHARTS__ = {
+    daily_plays: { labels: {{ charts.daily_plays.labels|safe }}, data: {{ charts.daily_plays.data|safe }} },
+    weekly_qr: { labels: {{ charts.weekly_qr.labels|safe }}, data: {{ charts.weekly_qr.data|safe }} },
+    coupon_redemption: { labels: {{ charts.coupon_redemption.labels|safe }}, data: {{ charts.coupon_redemption.data|safe }} },
+    popular_games: { labels: {{ charts.popular_games.labels|safe }}, data: {{ charts.popular_games.data|safe }} },
+    peak_hours: { labels: {{ charts.peak_hours.labels|safe }}, data: {{ charts.peak_hours.data|safe }} },
+  };
+</script>
+{% endblock %}

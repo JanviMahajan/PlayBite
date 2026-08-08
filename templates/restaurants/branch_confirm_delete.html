@@ -1,0 +1,23 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Delete Branch | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3>Delete Branch</h3>
+          <p>Are you sure you want to delete "{{ object.branch_name }}"?</p>
+          <form method="post">
+            {% csrf_token %}
+            <a href="{% url 'restaurants:branch_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button class="btn btn-danger">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

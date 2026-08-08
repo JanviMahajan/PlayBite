@@ -1,0 +1,36 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Rewards | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Rewards</h3>
+        <a href="{% url 'coupons:reward_create' %}" class="btn btn-warning text-white">Create Reward</a>
+      </div>
+      {% if rewards %}
+        <div class="row g-3">
+          {% for r in rewards %}
+            <div class="col-md-6 col-lg-4">
+              <div class="card shadow-sm p-3">
+                <h5>{{ r.title }}</h5>
+                <p class="small text-muted">{{ r.description }}</p>
+                <p><strong>Type:</strong> {{ r.get_reward_type_display }} • <strong>Min score:</strong> {{ r.minimum_score }}</p>
+                <div class="d-flex justify-content-between mt-2">
+                  <a href="{% url 'coupons:reward_edit' r.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                  <form method="post" action="{% url 'coupons:reward_delete' r.pk %}" onsubmit="return confirm('Delete reward?');">{% csrf_token %}<button class="btn btn-sm btn-danger">Delete</button></form>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <nav class="mt-4">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}</nav>
+      {% else %}
+        <div class="alert alert-info">No rewards yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

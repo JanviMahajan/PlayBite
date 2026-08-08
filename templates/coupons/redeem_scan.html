@@ -1,0 +1,83 @@
+{% extends 'base_clean.html' %}
+{% block title %}Redeem Coupon — Scan | PlayBite{% endblock %}
+{% block extra_css %}
+<style>
+  #videoWrap{max-width:720px;margin:20px auto;text-align:center}
+  video{width:100%;border-radius:12px}
+  .scan-overlay{position:relative}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container py-3 text-center">
+  <h4>Scan Coupon QR</h4>
+  <div id="videoWrap">
+    <div class="scan-overlay">
+      <video id="video" autoplay muted playsinline></video>
+    </div>
+    <div class="mt-2">
+      <button id="startBtn" class="btn btn-success">Start Camera</button>
+      <button id="stopBtn" class="btn btn-danger">Stop</button>
+      <button id="flashBtn" class="btn btn-outline-secondary">Flash</button>
+    </div>
+    <div id="scanResult" class="mt-3"></div>
+  </div>
+  <a href="{% url 'coupons_staff:staff_portal' %}" class="btn btn-link mt-3">Back</a>
+</div>
+{% block extra_js %}
+<script>
+(async function(){
+  const video = document.getElementById('video');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const flashBtn = document.getElementById('flashBtn');
+  const scanResult = document.getElementById('scanResult');
+  let stream=null; let track=null; let barcodeDetector = null;
+
+  if('BarcodeDetector' in window){
+    const formats = ['qr_code'];
+    barcodeDetector = new BarcodeDetector({formats});
+  }
+
+  startBtn.addEventListener('click', async ()=>{
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+      video.srcObject = stream; track = stream.getVideoTracks()[0];
+      video.play();
+      scanLoop();
+    }catch(e){ alert('Camera error: '+e.message); }
+  });
+  stopBtn.addEventListener('click', ()=>{ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } });
+  flashBtn.addEventListener('click', async ()=>{ if(!track) return; try{ await track.applyConstraints({advanced:[{torch: true}]}); }catch(e){ alert('Flash not supported'); } });
+
+  async function scanLoop(){
+    if(!stream) return;
+    if(barcodeDetector){
+      try{
+        const barcodes = await barcodeDetector.detect(video);
+        if(barcodes && barcodes.length){ handleCode(barcodes[0].rawValue); return; }
+      }catch(e){ /* continue */ }
+    } else {
+      // fallback: try to grab frame and decode with server? Not implemented.
+    }
+    requestAnimationFrame(scanLoop);
+  }
+
+  async function handleCode(raw){
+    scanResult.innerHTML = `<div class='alert alert-info'>Scanned: ${raw}</div>`;
+    // try validate via API
+    const form = new FormData(); form.append('token', raw);
+    const resp = await fetch('{% url "coupons_staff:scanner_validate_api" %}', {method:'POST', body:form});
+    const js = await resp.json();
+    if(js.ok){
+      // go to redeem action
+      const r = confirm('Valid coupon for '+js.coupon.reward+' for '+js.coupon.customer+' — Redeem now?');
+      if(r){ const form2 = new FormData(); form2.append('token', raw); const r2=await fetch('{% url "coupons_staff:scanner_redeem_api" %}', {method:'POST', body:form2}); const j2=await r2.json(); if(j2.ok){ alert('Redeemed'); window.location.href = '{% url "coupons_staff:staff_portal" %}'; } else { alert('Redeem failed:'+j2.reason); } }
+    } else {
+      alert('Invalid: '+js.reason);
+    }
+  }
+
+})();
+</script>
+{% endblock %}
+{% endblock %}

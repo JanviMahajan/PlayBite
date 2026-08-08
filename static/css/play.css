@@ -1,0 +1,46 @@
+/* Mobile-first guest play experience */
+.play-hero {
+  min-height: calc(100dvh - 56px);
+  padding: clamp(1.5rem, 5vw, 3rem) clamp(0.75rem, 4vw, 1.5rem);
+  background: linear-gradient(180deg, rgba(255, 159, 67, 0.08), rgba(255, 222, 89, 0.03));
+}
+
+.play-hero h2 {
+  font-weight: 700;
+  color: var(--pb-accent);
+  font-size: clamp(1.35rem, 5vw, 2rem);
+  word-break: break-word;
+}
+
+.play-hero .greeting {
+  font-size: clamp(1rem, 3.5vw, 1.15rem);
+  font-weight: 600;
+  color: var(--pb-text-muted);
+}
+
+.play-logo {
+  width: clamp(72px, 22vw, 96px);
+  height: clamp(72px, 22vw, 96px);
+  object-fit: cover;
+  box-shadow: var(--pb-shadow);
+}
+
+.play-actions {
+  width: min(100%, 420px);
+}
+
+.play-offers-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+}
+
+.instructions-list li {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.75rem;
+  }
+}

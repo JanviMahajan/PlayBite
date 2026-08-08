@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}PlayBite | QR engagement for restaurants{% endblock %}
+
+{% block content %}
+<div class="py-5 text-center text-white bg-primary rounded-4 shadow-sm">
+  <div class="container py-5">
+    <h1 class="display-5 fw-bold">Drive repeat visits with gamified QR experiences.</h1>
+    <p class="fs-5 text-white-75">Create table QR codes, launch rewards, and let guests unlock coupons that become valid the next day.</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg px-4">Get started</a>
+      <a href="#features" class="btn btn-outline-light btn-lg px-4">Learn more</a>
+    </div>
+  </div>
+</div>
+
+<section id="features" class="mt-5">
+  <h2 class="mb-4">Built for restaurants, bars, and cafés</h2>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <h3>QR table experiences</h3>
+          <p>Generate branded QR codes for every table and connect guests to a loyalty game instantly.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <h3>Rewards that return</h3>
+          <p>Create coupons that unlock only after the next day to encourage repeat bookings and longer customer lifecycles.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body">
+          <h3>Simple restaurant setup</h3>
+          <p>Manage venues, tables, and staff from one dashboard built to scale with modern hospitality operations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="rewards" class="mt-5">
+  <div class="row align-items-center">
+    <div class="col-lg-6">
+      <h2>Reward loyal guests with the right timing</h2>
+      <p class="lead">Coupons become valid the next day, so guests return for another visit rather than redeeming immediately.</p>
+      <ul class="list-unstyled">
+        <li>• Repeat-visit incentive campaigns</li>
+        <li>• Flexible reward tiers and redemption windows</li>
+        <li>• Easy coupon management for restaurant teams</li>
+      </ul>
+    </div>
+    <div class="col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Perfect for hospitality</h5>
+          <p class="card-text">PlayBite is designed to work with busy service environments and keep guests coming back.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,115 @@
+.dashboard-layout {
+  min-height: calc(100dvh - 56px);
+}
+
+.dashboard-sidebar {
+  background: var(--pb-surface);
+  min-height: calc(100dvh - 56px);
+}
+
+.dashboard-sidebar .nav-link,
+.dashboard-offcanvas .nav-link {
+  color: var(--pb-text);
+  padding: 0.75rem 1rem;
+  min-height: var(--pb-touch-min);
+  display: flex;
+  align-items: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.dashboard-sidebar .nav-link.active,
+.dashboard-offcanvas .nav-link.active,
+.dashboard-sidebar .nav-link:hover,
+.dashboard-offcanvas .nav-link:hover {
+  background: rgba(247, 181, 0, 0.14);
+  color: var(--pb-text);
+}
+
+.dashboard-main-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--pb-bg);
+}
+
+.dashboard-topnav {
+  z-index: 1025;
+  min-height: 56px;
+}
+
+.dashboard-footer {
+  background: var(--pb-surface);
+}
+
+.card.stat-card {
+  background: var(--pb-surface);
+  border: 1px solid var(--pb-border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--pb-primary);
+  color: #1a1a1a;
+  font-size: 1.25rem;
+  box-shadow: 0 8px 20px rgba(247, 181, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.stat-card h6 {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  margin-bottom: 0.35rem;
+  color: var(--pb-text-muted);
+}
+
+.stat-card h3 {
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.chart-card canvas {
+  width: 100% !important;
+  height: auto !important;
+  max-height: min(50vh, 320px);
+}
+
+.chart-skeleton {
+  display: none;
+}
+
+.chart-card.is-loading .chart-skeleton {
+  display: block;
+}
+
+.chart-card.is-loading canvas {
+  display: none;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s ease both;
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-main {
+    padding-bottom: 2rem !important;
+  }
+
+  .stat-card h3 {
+    font-size: 1.35rem;
+  }
+}

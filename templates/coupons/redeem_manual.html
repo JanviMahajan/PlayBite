@@ -1,0 +1,21 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Redeem Coupon — Manual | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <h3>Manual Coupon Redemption</h3>
+      <form method="post">{% csrf_token %}
+        <div class="mb-3"><label>Coupon Code</label><input name="code" class="form-control" placeholder="PB-XXXXXX"></div>
+        <div class="mb-3"><label>Branch (optional)</label>
+          <select name="branch" class="form-select"><option value="">-- Select Branch --</option>{% for b in request.user.restaurant.branches.all %}<option value="{{ b.pk }}">{{ b.branch_name }}</option>{% endfor %}</select>
+        </div>
+        <button class="btn btn-primary">Redeem</button>
+      </form>
+      <a href="{% url 'coupons_staff:staff_portal' %}" class="btn btn-link mt-3">Back</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+<nav class="navbar navbar-light bg-body border-bottom dashboard-topnav sticky-top" aria-label="Dashboard header">
+  <div class="container-fluid px-2 px-md-3">
+    <button class="btn btn-outline-secondary d-md-none me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#dashboardSidebar" aria-controls="dashboardSidebar" aria-label="Open navigation menu">
+      <span aria-hidden="true">☰</span>
+    </button>
+    <a class="navbar-brand d-flex align-items-center gap-2 text-truncate me-2" href="{% url 'restaurants:dashboard' %}">
+      {% if request.user.is_authenticated %}
+        {% if request.user.restaurant.logo %}
+          <img src="{{ request.user.restaurant.logo.url }}" alt="" width="36" height="36" class="rounded-circle flex-shrink-0" loading="lazy" decoding="async" />
+        {% else %}
+          <span class="rounded-circle bg-warning d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;" aria-hidden="true">PB</span>
+        {% endif %}
+        <span class="text-truncate fw-semibold">{{ request.user.restaurant.restaurant_name|default:request.user.get_full_name }}</span>
+      {% else %}
+        <span class="fw-semibold">PlayBite</span>
+      {% endif %}
+    </a>
+
+    <div class="ms-auto d-flex align-items-center gap-2 flex-shrink-0">
+      <button type="button" class="btn btn-sm btn-outline-secondary theme-toggle" data-theme-toggle aria-label="Toggle dark mode">
+        <span aria-hidden="true">🌓</span>
+      </button>
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <span class="d-none d-sm-inline">{{ request.user.full_name|default:"Account" }}</span>
+          <span class="d-sm-none" aria-hidden="true">👤</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
+          <li><a class="dropdown-item" href="{% url 'restaurants:restaurant_profile' %}">Profile</a></li>
+          <li><hr class="dropdown-divider" /></li>
+          <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>

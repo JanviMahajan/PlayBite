@@ -1,0 +1,15 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Delete Reward | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <h3>Delete Reward</h3>
+      <p>Are you sure you want to delete {{ object.title }}?</p>
+      <form method="post">{% csrf_token %}<button class="btn btn-danger">Confirm Delete</button> <a href="{% url 'coupons:reward_list' %}" class="btn btn-link">Cancel</a></form>
+    </div>
+  </div>
+</div>
+{% endblock %}

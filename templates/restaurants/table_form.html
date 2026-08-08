@@ -1,0 +1,28 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Table | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h3>{% if form.instance.pk %}Edit Table{% else %}Create Table{% endif %}</h3>
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form.visible_fields %}
+              <div class="mb-3">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% for err in field.errors %}<div class="form-text text-danger">{{ err }}</div>{% endfor %}
+              </div>
+            {% endfor %}
+            <button class="btn btn-warning text-white">Save</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Logged out | PlayBite{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-8">
+    <div class="alert alert-success">You have been logged out successfully.</div>
+    <a href="{% url 'accounts:login' %}" class="btn btn-warning text-white">Return to login</a>
+  </div>
+</div>
+{% endblock %}

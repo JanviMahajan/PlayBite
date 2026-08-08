@@ -1,0 +1,18 @@
+{% extends 'base_clean.html' %}
+{% load static %}
+{% block title %}Today's Challenge | {{ restaurant.restaurant_name }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/play.css' %}">{% endblock %}
+{% block content %}
+<div class="container py-4 text-center">
+  <a href="/play/{{ qr_slug }}/" class="btn btn-link">← Back</a>
+  <div class="card shadow-sm p-4 mx-auto" style="max-width:520px;">
+    <h3>Today's Challenge</h3>
+    <h4 class="mt-2">{{ game.name }}</h4>
+    <p class="text-muted">{{ game.instructions }}</p>
+    <div class="d-grid gap-2 mt-3">
+      <a href="{{ start_url }}" class="btn btn-warning btn-lg text-white">Start Game</a>
+      <a href="/play/{{ request.resolver_match.kwargs.qr_slug }}/offers/" class="btn btn-outline-secondary">See Offers</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

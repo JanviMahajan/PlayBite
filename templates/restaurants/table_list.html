@@ -1,0 +1,83 @@
+{% extends 'base_dashboard.html' %}
+{% block title %}Tables | PlayBite{% endblock %}
+{% block content %}
+<div class="row">
+  {% include 'restaurants/includes/sidebar.html' %}
+  <div class="col-md-9 col-lg-10">
+    {% include 'restaurants/includes/topnav.html' %}
+    <div class="p-4">
+      <div class="d-flex justify-content-between mb-3">
+        <h3>Tables</h3>
+        <a href="{% url 'restaurants:table_create' %}" class="btn btn-warning text-white">Create Table</a>
+      </div>
+
+      <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+          <input type="search" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search tables..." />
+        </div>
+        <div class="col-md-3">
+          <select name="branch" class="form-select">
+            <option value="">All branches</option>
+            {% for b in branches %}
+              <option value="{{ b.id }}" {% if request.GET.branch == b.id|stringformat:"s" %}selected{% endif %}>{{ b.branch_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select name="status" class="form-select">
+            <option value="">Any status</option>
+            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary w-100">Filter</button>
+        </div>
+      </form>
+
+      {% if tables %}
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Branch</th>
+                <th>Table Number</th>
+                <th>Status</th>
+                <th>QR</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in tables %}
+                <tr>
+                  <td>{{ t.branch.branch_name }}</td>
+                  <td>{{ t.table_number }}</td>
+                  <td>{% if t.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+                  <td>QR Pending</td>
+                  <td class="text-end">
+                    <a href="{% url 'restaurants:table_edit' t.pk %}" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
+                    <form method="post" action="{% url 'restaurants:table_delete' t.pk %}" class="d-inline" onsubmit="return confirm('Delete this table?');">{% csrf_token %}<button class="btn btn-sm btn-danger">Delete</button></form>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <nav class="mt-3">
+          <ul class="pagination">
+            {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% else %}
+        <div class="alert alert-info">No tables found. Create one to get started.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
