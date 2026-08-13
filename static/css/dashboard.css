@@ -3,32 +3,38 @@
 }
 
 .dashboard-sidebar {
-  background: var(--pb-surface);
+  background: rgba(255,255,255,.66);
+  backdrop-filter: blur(16px);
   min-height: calc(100dvh - 56px);
+  border-inline-end: 1px solid var(--border);
 }
 
 .dashboard-sidebar .nav-link,
 .dashboard-offcanvas .nav-link {
-  color: var(--pb-text);
+  color: var(--text);
   padding: 0.75rem 1rem;
   min-height: var(--pb-touch-min);
   display: flex;
   align-items: center;
-  transition: background 0.2s ease, color 0.2s ease;
+  margin: .15rem .55rem;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, transform .2s ease;
 }
 
 .dashboard-sidebar .nav-link.active,
 .dashboard-offcanvas .nav-link.active,
 .dashboard-sidebar .nav-link:hover,
 .dashboard-offcanvas .nav-link:hover {
-  background: rgba(247, 181, 0, 0.14);
-  color: var(--pb-text);
+  background: rgba(243,107,50,.11);
+  color: var(--primary);
+  transform: translateX(2px);
 }
 
 .dashboard-main-wrap {
   flex: 1 1 auto;
   min-width: 0;
-  background: var(--pb-bg);
+  background: transparent;
 }
 
 .dashboard-topnav {
@@ -37,12 +43,13 @@
 }
 
 .dashboard-footer {
-  background: var(--pb-surface);
+  background: rgba(255,255,255,.55);
 }
 
 .card.stat-card {
-  background: var(--pb-surface);
-  border: 1px solid var(--pb-border);
+  background: rgba(255,255,255,.7);
+  border: 1px solid var(--border);
+  border-radius: 20px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -62,7 +69,7 @@
   text-transform: uppercase;
   font-size: 0.72rem;
   margin-bottom: 0.35rem;
-  color: var(--pb-text-muted);
+  color: var(--muted);
 }
 
 .stat-card h3 {
@@ -103,6 +110,8 @@
 .animate-fade-in {
   animation: fadeInUp 0.4s ease both;
 }
+
+.dashboard-topnav{background:rgba(255,250,245,.8)!important;backdrop-filter:blur(18px);border-color:var(--border)!important}.dashboard-main .card{border:1px solid var(--border)!important;border-radius:20px!important;box-shadow:var(--shadow-card)!important}.dashboard-main h1,.dashboard-main h2,.dashboard-main h3{font-family:"Space Grotesk"}.dashboard-main .table{color:var(--text)}.dashboard-main .table>:not(caption)>*>*{border-color:var(--border);padding:.85rem}.dashboard-main .badge{border-radius:999px;padding:.45rem .7rem}.dashboard-main .pagination .page-link{color:var(--primary);border-color:var(--border);background:var(--surface)}
 
 @media (max-width: 767.98px) {
   .dashboard-main {

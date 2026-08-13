@@ -1,0 +1,656 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-13 06:59+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Restaurant Name"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "Confirm Password"
+msgstr ""
+
+msgid "Full Name"
+msgstr ""
+
+msgid "Email Address"
+msgstr ""
+
+msgid "An account with this email already exists."
+msgstr ""
+
+msgid "The two password fields did not match."
+msgstr ""
+
+msgid "Remember me"
+msgstr ""
+
+msgid "The Email field must be set"
+msgstr ""
+
+msgid "Superuser must have is_staff=True."
+msgstr ""
+
+msgid "Superuser must have is_superuser=True."
+msgstr ""
+
+msgid "Owner"
+msgstr ""
+
+msgid "Staff"
+msgstr ""
+
+msgid "Super Admin"
+msgstr ""
+
+msgid "email address"
+msgstr ""
+
+msgid "full name"
+msgstr ""
+
+msgid "role"
+msgstr ""
+
+msgid "active"
+msgstr ""
+
+msgid "staff status"
+msgstr ""
+
+msgid "date joined"
+msgstr ""
+
+msgid "user"
+msgstr ""
+
+msgid "users"
+msgstr ""
+
+msgid "Percentage Discount"
+msgstr ""
+
+msgid "Flat Discount"
+msgstr ""
+
+msgid "Free Item"
+msgstr ""
+
+msgid "Buy One Get One"
+msgstr ""
+
+msgid "Free Beverage"
+msgstr ""
+
+msgid "Free Dessert"
+msgstr ""
+
+msgid "Custom Reward"
+msgstr ""
+
+msgid "All Games"
+msgstr ""
+
+msgid "Specific Games"
+msgstr ""
+
+msgid "restaurant"
+msgstr ""
+
+msgid "title"
+msgstr ""
+
+msgid "description"
+msgstr ""
+
+msgid "reward type"
+msgstr ""
+
+msgid "reward value"
+msgstr ""
+
+msgid "minimum score"
+msgstr ""
+
+msgid "game eligibility"
+msgstr ""
+
+msgid "start date"
+msgstr ""
+
+msgid "end date"
+msgstr ""
+
+msgid "coupon valid days"
+msgstr ""
+
+msgid "max daily redemptions"
+msgstr ""
+
+msgid "max total redemptions"
+msgstr ""
+
+msgid "reward"
+msgstr ""
+
+msgid "rewards"
+msgstr ""
+
+msgid "Pending"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Expired"
+msgstr ""
+
+msgid "Redeemed"
+msgstr ""
+
+msgid "customer"
+msgstr ""
+
+msgid "branch"
+msgstr ""
+
+msgid "table"
+msgstr ""
+
+msgid "gameplay"
+msgstr ""
+
+msgid "coupon code"
+msgstr ""
+
+msgid "status"
+msgstr ""
+
+msgid "generated at"
+msgstr ""
+
+msgid "valid from"
+msgstr ""
+
+msgid "expiry at"
+msgstr ""
+
+msgid "qr token"
+msgstr ""
+
+msgid "QR image"
+msgstr ""
+
+msgid "redemption count"
+msgstr ""
+
+msgid "coupon"
+msgstr ""
+
+msgid "coupons"
+msgstr ""
+
+msgid "redeemed at"
+msgstr ""
+
+msgid "device"
+msgstr ""
+
+msgid "reason"
+msgstr ""
+
+msgid "redemption"
+msgstr ""
+
+msgid "redemptions"
+msgstr ""
+
+msgid "phone number"
+msgstr ""
+
+msgid "WhatsApp number"
+msgstr ""
+
+msgid "total visits"
+msgstr ""
+
+msgid "customers"
+msgstr ""
+
+msgid "Easy"
+msgstr ""
+
+msgid "Medium"
+msgstr ""
+
+msgid "Hard"
+msgstr ""
+
+msgid "name"
+msgstr ""
+
+msgid "slug"
+msgstr ""
+
+msgid "difficulty"
+msgstr ""
+
+msgid "duration"
+msgstr ""
+
+msgid "game"
+msgstr ""
+
+msgid "games"
+msgstr ""
+
+msgid "Assigned"
+msgstr ""
+
+msgid "In progress"
+msgstr ""
+
+msgid "Won"
+msgstr ""
+
+msgid "Lost"
+msgstr ""
+
+msgid "restaurant table"
+msgstr ""
+
+msgid "score"
+msgstr ""
+
+msgid "completed"
+msgstr ""
+
+msgid "play time"
+msgstr ""
+
+msgid "IP address"
+msgstr ""
+
+msgid "gameplays"
+msgstr ""
+
+msgid "Build That Burger!"
+msgstr "ابنِ البرغر!"
+
+msgid ""
+"Drop the ingredients at the right moment and build the perfect burger before "
+"time runs out!"
+msgstr "أسقط المكونات في اللحظة المناسبة وابنِ البرغر المثالي قبل انتهاء الوقت!"
+
+msgid "Watch the ingredient move."
+msgstr "راقب المكوّن وهو يتحرك."
+
+msgid "Tap anywhere to drop it."
+msgstr "اضغط في أي مكان لإسقاطه."
+
+msgid "Stack all the ingredients."
+msgstr "رتّب جميع المكونات فوق بعضها."
+
+msgid "Finish before the timer reaches the flag!"
+msgstr "أكمل قبل أن يصل المؤقت إلى العلم!"
+
+msgid "Let's Stack! 🍔"
+msgstr "لنبدأ الترتيب! 🍔"
+
+msgid "Remember the Order!"
+msgstr "تذكّر الطلب!"
+
+msgid ""
+"A hungry customer is waiting! Memorize their order and recreate it before "
+"time runs out."
+msgstr "هناك زبون جائع ينتظر! احفظ طلبه وأعد ترتيبه قبل انتهاء الوقت."
+
+msgid "Memorize the order."
+msgstr "احفظ الطلب."
+
+msgid "The order will disappear."
+msgstr "سيختفي الطلب."
+
+msgid "Tap the items in the same order."
+msgstr "اضغط على العناصر بالترتيب نفسه."
+
+msgid "Complete it before the flag!"
+msgstr "أكمله قبل وصول المؤقت إلى العلم!"
+
+msgid "I'm Ready! 👀"
+msgstr "أنا جاهز! 👀"
+
+msgid "Match the Treats!"
+msgstr "طابق الحلوى!"
+
+msgid "Find all the matching food pairs before time runs out!"
+msgstr "اعثر على كل أزواج الطعام المتطابقة قبل انتهاء الوقت!"
+
+msgid "Tap a card to reveal it."
+msgstr "اضغط على بطاقة لكشفها."
+
+msgid "Find its matching pair."
+msgstr "اعثر على البطاقة المطابقة لها."
+
+msgid "Match every pair."
+msgstr "طابق جميع الأزواج."
+
+msgid "Beat the timer!"
+msgstr "تغلّب على الوقت!"
+
+msgid "Start Matching! ✨"
+msgstr "ابدأ المطابقة! ✨"
+
+msgid "Perfect Slice!"
+msgstr "قطعة مثالية!"
+
+msgid "Time your taps and slice the pizza at just the right moment!"
+msgstr "اختر توقيت ضغطاتك واقطع البيتزا في اللحظة المناسبة!"
+
+msgid "Watch the moving cutter."
+msgstr "راقب أداة القطع المتحركة."
+
+msgid "Wait for the highlighted zone."
+msgstr "انتظر حتى تصل إلى المنطقة المضيئة."
+
+msgid "Tap to make the cut."
+msgstr "اضغط لتنفيذ القطع."
+
+msgid "Complete three cuts in time!"
+msgstr "أكمل ثلاث قطعات قبل انتهاء الوقت!"
+
+msgid "Slice It! 🍕"
+msgstr "اقطعها! 🍕"
+
+msgid "Enter a valid phone number."
+msgstr ""
+
+msgid "Table number must be unique within the branch."
+msgstr ""
+
+msgid "owner"
+msgstr ""
+
+msgid "restaurant name"
+msgstr ""
+
+msgid "logo"
+msgstr ""
+
+msgid "email"
+msgstr ""
+
+msgid "address"
+msgstr ""
+
+msgid "city"
+msgstr ""
+
+msgid "state"
+msgstr ""
+
+msgid "country"
+msgstr ""
+
+msgid "pincode"
+msgstr ""
+
+msgid "opening time"
+msgstr ""
+
+msgid "closing time"
+msgstr ""
+
+msgid "primary color"
+msgstr ""
+
+msgid "secondary color"
+msgstr ""
+
+msgid "restaurants"
+msgstr ""
+
+msgid "branch name"
+msgstr ""
+
+msgid "latitude"
+msgstr ""
+
+msgid "longitude"
+msgstr ""
+
+msgid "branches"
+msgstr ""
+
+msgid "table number"
+msgstr ""
+
+msgid "QR slug"
+msgstr ""
+
+msgid "tables"
+msgstr ""
+
+msgid "Owner login"
+msgstr "دخول مالك المطعم"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "Login"
+msgstr "تسجيل الدخول"
+
+msgid "Forgot password?"
+msgstr "نسيت كلمة المرور؟"
+
+msgid "Create account"
+msgstr "إنشاء حساب"
+
+msgid "Staff Portal"
+msgstr "بوابة الموظفين"
+
+msgid "Scan QR"
+msgstr "امسح رمز QR"
+
+msgid "Manual Code"
+msgstr "إدخال الرمز يدويًا"
+
+msgid "Redemption History"
+msgstr "سجل الاستخدام"
+
+msgid "Today's Redemptions"
+msgstr "استخدامات اليوم"
+
+msgid "Active Coupons"
+msgstr "القسائم النشطة"
+
+msgid "That’s all for today!"
+msgstr "هذا كل شيء لليوم!"
+
+msgid "You’ve already played today’s PlayBite challenge."
+msgstr "لقد لعبت تحدّي PlayBite اليوم بالفعل."
+
+msgid "Come back tomorrow for another chance to win! 🍔✨"
+msgstr "عُد غدًا لفرصة جديدة للفوز! 🍔✨"
+
+msgid "Your unlocked treat"
+msgstr "مكافأتك"
+
+msgid "Valid from"
+msgstr "صالحة من"
+
+msgid "Back to restaurant"
+msgstr "العودة إلى المطعم"
+
+msgid "Today’s challenge"
+msgstr "تحدّي اليوم"
+
+msgid "How to Play"
+msgstr "طريقة اللعب"
+
+#, python-format
+msgid "About %(seconds)s second"
+msgid_plural "About %(seconds)s seconds"
+msgstr[0] "حوالي %(seconds)s ثانية"
+msgstr[1] "حوالي ثانية واحدة"
+msgstr[2] "حوالي ثانيتين"
+msgstr[3] "حوالي %(seconds)s ثوانٍ"
+msgstr[4] "حوالي %(seconds)s ثانية"
+msgstr[5] "حوالي %(seconds)s ثانية"
+
+msgid "We couldn’t start"
+msgstr "تعذّر بدء اللعبة"
+
+msgid "Please check your connection and refresh safely."
+msgstr "تحقق من اتصالك ثم حدّث الصفحة بأمان."
+
+msgid "Refresh"
+msgstr "تحديث"
+
+msgid "Oops! Time’s up! ⏰"
+msgstr "أوه! انتهى الوقت! ⏰"
+
+msgid ""
+"You were so close! We’ll have another challenge waiting for you tomorrow. ✨"
+msgstr "كنت قريبًا جدًا! سيكون لدينا تحدٍ جديد بانتظارك غدًا. ✨"
+
+msgid "Try Again Tomorrow"
+msgstr "حاول مجددًا غدًا"
+
+msgid "You did it!"
+msgstr "لقد نجحت!"
+
+msgid "You’ve unlocked a treat!"
+msgstr "لقد ربحت مكافأة لذيذة!"
+
+msgid "Done"
+msgstr "تم"
+
+msgid "Burger complete! 🍔✨"
+msgstr "اكتمل البرغر! 🍔✨"
+
+msgid "Order served! ✨"
+msgstr "تم تقديم الطلب! ✨"
+
+msgid "All treats matched! ✨"
+msgstr "تمت مطابقة كل الحلوى! ✨"
+
+msgid "Perfectly sliced! 🍕✨"
+msgstr "تقطيع مثالي! 🍕✨"
+
+msgid "One tiny step"
+msgstr "خطوة بسيطة"
+
+msgid "Where should we send your reward if you win?"
+msgstr "أين نرسل مكافأتك إذا فزت؟"
+
+msgid "No account needed. This also keeps today’s challenge fair for everyone."
+msgstr "لا تحتاج إلى حساب. يساعدنا هذا أيضًا على إبقاء تحدّي اليوم عادلًا للجميع."
+
+msgid "Your name"
+msgstr "اسمك"
+
+msgid "e.g. Janvi"
+msgstr "مثال: جنى"
+
+msgid "WhatsApp / Phone"
+msgstr "واتساب / الهاتف"
+
+msgid "Continue to my game ✨"
+msgstr "المتابعة إلى لعبتي ✨"
+
+#, python-format
+msgid "One play per day at %(restaurant_name)s."
+msgstr "محاولة واحدة يوميًا في %(restaurant_name)s."
+
+msgid "Language"
+msgstr "اللغة"
+
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+msgid "Restaurant Profile"
+msgstr "ملف المطعم"
+
+msgid "Branches"
+msgstr "الفروع"
+
+msgid "Tables"
+msgstr "الطاولات"
+
+msgid "QR Codes"
+msgstr "رموز QR"
+
+msgid "Rewards"
+msgstr "المكافآت"
+
+msgid "Analytics"
+msgstr "التحليلات"
+
+msgid "Coupons"
+msgstr "القسائم"
+
+msgid "Staff portal"
+msgstr "بوابة الموظفين"
+
+msgid "Logout"
+msgstr "تسجيل الخروج"
+
+msgid "Welcome to"
+msgstr "مرحبًا بك في"
+
+msgid "Table"
+msgstr "طاولة"
+
+msgid "Ready for a quick challenge?"
+msgstr "هل أنت جاهز لتحدٍ سريع؟"
+
+msgid "Play & Win"
+msgstr "العب واربح"
+
+msgid "How it works"
+msgstr "كيف تعمل"
+
+msgid "View rewards"
+msgstr "عرض المكافآت"
+
+msgid "No app download"
+msgstr "لا حاجة لتنزيل تطبيق"
+
+msgid "Takes under a minute"
+msgstr "تستغرق أقل من دقيقة"
+
+msgid "How It Works"
+msgstr "كيف تعمل"
+
+msgid "Scan the QR code"
+msgstr "امسح رمز QR"
+
+msgid "Play a short skill-based challenge"
+msgstr "العب تحديًا قصيرًا يعتمد على المهارة"
+
+msgid "Win a reward if you qualify"
+msgstr "اربح مكافأة عند إكمال التحدّي"
+
+msgid "Coupon becomes valid starting tomorrow"
+msgstr "تصبح القسيمة صالحة بدءًا من الغد"
+
+msgid "Redeem before it expires"
+msgstr "استخدمها قبل انتهاء صلاحيتها"

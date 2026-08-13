@@ -1,98 +1,63 @@
-// GameEngine: shared lifecycle, timer, score, pause, mute, FPS-friendly loop
 export default class GameEngine {
-  constructor({root, duration=30, onEnd}){
-    this.root = root;
-    this.duration = duration;
-    this.onEnd = onEnd;
-    this.game = null;
-    this.timer = duration;
-    this.interval = null;
-    this.score = 0;
-    this.paused = false;
-    this.muted = false;
-    this.tickRate = 1000/60;
-    this._lastTick = performance.now();
-    this._frame = null;
-
-    this._onTick = this._onTick.bind(this);
+  constructor({root, slug, startUrl, submitUrl, ui, GameClass, strings={}}) {
+    Object.assign(this, {root, slug, startUrl, submitUrl, ui, GameClass, strings});
+    this.running = false; this.ending = false; this.muted = true; this.frame = null;
   }
 
-  async load(gameInstance){
-    this.game = gameInstance;
-    if(this.game && typeof this.game.init === 'function'){
-      await this.game.init();
-    }
-    // show initial state
-    this._renderScore();
-    this._renderTimer();
+  csrf() { return document.cookie.split('; ').find(v => v.startsWith('csrftoken='))?.split('=').slice(1).join('=') || ''; }
+  async request(url, body = {}) {
+    const response = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':decodeURIComponent(this.csrf())}, body:JSON.stringify(body)});
+    const data = await response.json();
+    if (!response.ok) throw Object.assign(new Error(data.error || 'Request failed'), {status:response.status});
+    return data;
   }
-
-  start(){
-    this._startTime = performance.now();
-    this._lastFrameTime = performance.now();
-    this._frame = requestAnimationFrame(this._onTick);
-  }
-
-  _onTick(now){
-    if(this.paused){ this._lastTick = now; this._frame = requestAnimationFrame(this._onTick); return; }
-    const dt = (now - (this._lastTick || now)) / 1000;
-    this._lastTick = now;
-
-    // update timer
-    this.timer -= dt;
-    if(this.timer < 0) this.timer = 0;
-    this._renderTimer();
-
-    // delegate to game
-    if(this.game && typeof this.game.update === 'function'){
-      this.game.update(dt);
-    }
-
-    // update HUD
-    this._renderScore();
-
-    if(this.timer <= 0){
-      this.end('timeout');
-      return;
-    }
-
-    this._frame = requestAnimationFrame(this._onTick);
-  }
-
-  addScore(n){ this.score += n; this._renderScore(); }
-  setScore(n){ this.score = n; this._renderScore(); }
-
-  _renderScore(){
-    const el = document.getElementById('game-score');
-    if(el) el.innerText = this.score;
-  }
-  _renderTimer(){
-    const el = document.getElementById('game-timer');
-    if(!el) return;
-    const s = Math.ceil(this.timer);
-    const mm = String(Math.floor(s/60)).padStart(2,'0');
-    const ss = String(s%60).padStart(2,'0');
-    el.innerText = `${mm}:${ss}`;
-  }
-
-  togglePause(){
-    this.paused = !this.paused;
-    if(this.paused){ cancelAnimationFrame(this._frame); }
-    else { this._lastTick = performance.now(); this._frame = requestAnimationFrame(this._onTick); }
-  }
-  toggleMute(){ this.muted = !this.muted; }
-
-  async end(status='completed'){
-    // stop loop
-    cancelAnimationFrame(this._frame);
-    this.timer = 0;
-    if(this.game && typeof this.game.destroy === 'function'){
-      try{ await this.game.destroy(); }catch(e){console.warn(e);} 
-    }
-    // call onEnd callback with result payload
-    if(typeof this.onEnd === 'function'){
-      const elapsed = this.duration - this.timer;
-      this.onEnd({score: this.score, time: Math.round(elapsed), status});
+  async begin() {
+    const button = document.getElementById('start-game'); button.disabled = true;
+    try {
+      await this.countdown();
+      const session = await this.request(this.startUrl);
+      this.challenge = session.challenge; this.duration = session.duration;
+      this.mount();
+    } catch (error) {
+      this.root.innerHTML = `<div class="pb-result"><div class="pb-game-hero">📡</div><h1>${this.strings.couldNotStart}</h1><p>${this.strings.connection}</p><button class="pb-primary-button" onclick="location.reload()">${this.strings.refresh}</button></div>`;
     }
   }
+  async countdown() {
+    this.root.innerHTML = '<div class="pb-countdown" aria-label="Game countdown"><strong></strong></div>';
+    const node = this.root.querySelector('strong');
+    for (const value of ['3','2','1','GO! 🎮']) { node.textContent=value; node.classList.remove('pop'); void node.offsetWidth; node.classList.add('pop'); await new Promise(r=>setTimeout(r,value[0]==='G'?600:520)); }
+  }
+  mount() {
+    this.root.innerHTML = `<div class="pb-play-head"><div><span class="pb-eyebrow">${this.strings.todayChallenge}</span><h1>${this.ui.title}</h1></div><small id="seconds-left">${this.duration}s</small></div><div class="pb-time-track" role="timer" aria-label="Time remaining"><span class="pb-time-start">●</span><div class="pb-time-fill"></div><span class="pb-runner">${this.ui.icon}</span><span class="pb-flag">🏁</span></div><div id="game-stage" class="pb-stage"></div><p id="game-status" class="pb-game-status" role="status"></p>`;
+    this.stage = this.root.querySelector('#game-stage');
+    this.game = new this.GameClass(this, this.challenge); this.game.init();
+    this.started = performance.now(); this.running = true; this.frame = requestAnimationFrame(t=>this.tick(t));
+  }
+  tick(now) {
+    if (!this.running) return;
+    const elapsed=(now-this.started)/1000, remaining=Math.max(0,this.duration-elapsed), progress=Math.min(1,elapsed/this.duration);
+    this.root.style.setProperty('--time-progress', `${progress*100}%`);
+    this.root.classList.toggle('is-urgent', progress >= .8);
+    this.root.querySelector('#seconds-left').textContent=`${Math.ceil(remaining)}s`;
+    this.game?.update?.(now, remaining);
+    if (remaining <= 0) { this.finish('timeout', {}); return; }
+    this.frame=requestAnimationFrame(t=>this.tick(t));
+  }
+  status(message, kind='') { const el=this.root.querySelector('#game-status'); if(el){el.textContent=message;el.dataset.kind=kind;} }
+  sound(type) { if(this.muted) return; const ctx=this.audio||(this.audio=new AudioContext()); const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=type==='success'?660:340;g.gain.value=.025;o.connect(g).connect(ctx.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.12);o.stop(ctx.currentTime+.13); }
+  toggleMute(button) { this.muted=!this.muted; button.textContent=this.muted?'🔇':'🔊';button.setAttribute('aria-pressed',String(this.muted));button.setAttribute('aria-label',this.muted?'Unmute game sounds':'Mute game sounds'); }
+  complete(evidence) { this.finish('completed', evidence); }
+  async finish(outcome, evidence) {
+    if (this.ending) return; this.ending=true;this.running=false;cancelAnimationFrame(this.frame);this.game?.destroy?.();
+    try { const result=await this.request(this.submitUrl,{outcome,evidence}); this.showResult(result); }
+    catch { this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero">📡</div><h1>Result saved?</h1><p>We lost the connection while checking. Refresh this page to safely see today’s final status.</p><button class="pb-primary-button" onclick="location.reload()">Refresh</button></div>'; }
+  }
+  showResult(result) {
+    if (!result.won) {
+      this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero fail">🥹</div><h1>${this.strings.timeUp}</h1><p>${this.strings.soClose}</p><a class="pb-primary-button" href="/">${this.strings.tomorrow}</a></div>`; return;
+    }
+    this.sound('success'); this.confetti(); const coupon=result.coupon;
+    this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>${this.strings.didIt}</h1><p>${this.strings.unlocked}</p>${coupon?`<div class="pb-coupon"><span>${coupon.reward}</span><code>${coupon.code}</code><small>${this.strings.validFrom} ${new Date(coupon.valid_from).toLocaleDateString(document.documentElement.lang)}</small></div>`:''}<a class="pb-primary-button" href="/">${this.strings.done}</a></div>`;
+  }
+  confetti(){for(let i=0;i<36;i++){const p=document.createElement('i');p.className='confetti-piece';p.style.left=Math.random()*100+'vw';p.style.background=['#f36b32','#f8b84e','#30b978'][i%3];p.style.animationDelay=Math.random()*.3+'s';document.body.append(p);setTimeout(()=>p.remove(),2400);}}
 }

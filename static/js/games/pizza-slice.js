@@ -1,0 +1,8 @@
+export default class PizzaSlice {
+  constructor(engine,challenge){this.e=engine;this.c=challenge;this.index=0;this.angle=0;this.cuts=[];this.tap=this.tap.bind(this);}
+  init(){this.e.stage.innerHTML='<div class="pizza-game" tabindex="0" aria-label="Tap when the cutter reaches the highlighted pizza zone"><div class="pizza"><div class="target-zone"></div><div class="cutter">🔪</div><span>🍕</span></div><strong class="cuts">0 / 3 perfect cuts</strong></div>';this.box=this.e.stage.querySelector('.pizza-game');this.cutter=this.e.stage.querySelector('.cutter');this.zone=this.e.stage.querySelector('.target-zone');this.box.addEventListener('pointerdown',this.tap);this.box.addEventListener('keydown',x=>{if(x.code==='Space'||x.code==='Enter'){x.preventDefault();this.tap();}});this.showZone();}
+  showZone(){const z=this.c.zones[this.index];this.zone.style.transform=`rotate(${z.center}deg)`;}
+  update(){this.angle=(this.angle+1.8+this.index*.35)%360;this.cutter.style.transform=`rotate(${this.angle}deg)`;}
+  distance(a,b){return Math.abs((a-b+180)%360-180);}
+  tap(){if(this.e.ending)return;const z=this.c.zones[this.index];if(this.distance(this.angle,z.center)>z.width/2){this.box.classList.add('shake');setTimeout(()=>this.box.classList.remove('shake'),220);this.e.status('✨','miss');return;}this.cuts.push(Number(this.angle.toFixed(2)));this.index++;this.e.stage.querySelector('.cuts').textContent=`${this.index} / ${this.c.zones.length}`;this.e.sound('correct');if(this.index===this.c.zones.length){this.e.stage.querySelector('.pizza').classList.add('sliced');this.e.status(this.e.strings.perfectlySliced,'success');setTimeout(()=>this.e.complete({cuts:this.cuts}),350);}else this.showZone();}
+}

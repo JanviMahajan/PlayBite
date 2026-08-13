@@ -266,6 +266,16 @@ class QRDetailView(LoginRequiredMixin, OwnerRequiredMixin, DetailView):
     def get_queryset(self):
         return RestaurantTable.objects.filter(branch__restaurant__owner=self.request.user)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.conf import settings
+        public_base_url = getattr(settings, 'PUBLIC_BASE_URL', '')
+        context['scan_url'] = (
+            f"{public_base_url.rstrip('/')}{self.object.get_qr_url()}"
+            if public_base_url else self.request.build_absolute_uri(self.object.get_qr_url())
+        )
+        return context
+
 
 from django.http import FileResponse, Http404
 from io import BytesIO
@@ -442,46 +452,57 @@ import random
 
 
 class PlayStartView(View):
-    """Select a random active game and show the Today's Challenge screen (doesn't start the game)."""
-    def post(self, request, qr_slug):
-        # validate
+    """Lightweight identity, daily eligibility check, and server game assignment."""
+    def _table(self, qr_slug):
         try:
             table = RestaurantTable.objects.select_related('branch__restaurant').get(qr_slug=qr_slug)
         except RestaurantTable.DoesNotExist:
-            return JsonResponse({'error': 'invalid_qr'}, status=404)
-
+            return None
         restaurant = table.branch.restaurant
         if not (restaurant.is_active and table.branch.is_active and table.is_active):
-            return JsonResponse({'error': 'invalid_qr'}, status=404)
+            return None
+        return table
 
-        # Select a random active Game from database
-        from games.models import Game
-        qs = Game.objects.filter(is_active=True)
-        available = list(qs.values('slug', 'name', 'description', 'duration'))
-        if not available:
-            # fallback to built-in list if DB has no games
-            available = [
-                {'slug': 'memory-match', 'name': 'Memory Match', 'description': 'Match the pairs to win.', 'duration': 30},
-                {'slug': 'maze-escape', 'name': 'Maze Escape', 'description': 'Reach the exit.', 'duration': 30},
-                {'slug': 'fruit-slice', 'name': 'Fruit Slice Challenge', 'description': 'Slice fruits, avoid bombs.', 'duration': 30},
-            ]
-        selected = random.choice(available)
-        selected_payload = {
-            **selected,
-            'duration': int(selected['duration'].total_seconds())
-            if hasattr(selected['duration'], 'total_seconds')
-            else int(selected['duration']),
-        }
+    def get(self, request, qr_slug):
+        table = self._table(qr_slug)
+        if not table:
+            return render(request, 'restaurants/play_invalid.html', status=404)
+        return render(request, 'games/identify.html', {'table': table, 'restaurant': table.branch.restaurant})
 
-        # store selected game in session
+    def post(self, request, qr_slug):
+        table = self._table(qr_slug)
+        if not table:
+            return render(request, 'restaurants/play_invalid.html', status=404)
+        from customer.models import Customer
+        from games.services.gameplay import assign_daily_game, normalize_phone
+        try:
+            phone = normalize_phone(request.POST.get('phone_number'))
+        except ValueError as exc:
+            return render(request, 'games/identify.html', {
+                'table': table, 'restaurant': table.branch.restaurant, 'error': str(exc),
+                'full_name': request.POST.get('full_name', ''),
+            }, status=400)
+        full_name = request.POST.get('full_name', '').strip()
+        if not full_name:
+            return render(request, 'games/identify.html', {
+                'table': table, 'restaurant': table.branch.restaurant,
+                'error': 'Please enter your name.', 'phone_number': phone,
+            }, status=400)
+        customer, created = Customer.objects.get_or_create(
+            phone_number=phone,
+            defaults={'full_name': full_name, 'whatsapp_number': phone},
+        )
+        if not created and customer.full_name != full_name:
+            customer.full_name = full_name
+            customer.save(update_fields=['full_name', 'updated_at'])
+        gameplay, assigned = assign_daily_game(customer, table.branch.restaurant, table, request)
         play_session = request.session.get('play_session', {})
-        play_session['selected_game'] = selected_payload
+        play_session.update({'customer_id': customer.pk, 'gameplay_id': gameplay.pk})
         request.session['play_session'] = play_session
-        request.session.modified = True
-
-        # Return JSON with challenge info and a redirect URL for the Start Game button
-        game_url = f"/games/{selected_payload['slug']}/?session={play_session.get('session_id')}"
-        return JsonResponse({'game': selected_payload, 'start_url': game_url})
+        if not assigned:
+            coupon = gameplay.coupons.first()
+            return render(request, 'games/already_played.html', {'gameplay': gameplay, 'coupon': coupon})
+        return redirect('games:game_play', slug=gameplay.game.slug)
 
 
 # Keep backward-compatible name for top-level import used in playbite.urls earlier

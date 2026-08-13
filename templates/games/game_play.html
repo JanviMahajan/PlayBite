@@ -1,138 +1,53 @@
 {% extends 'base_clean.html' %}
-{% load static %}
-{% block title %}{{ game.name }} — Play | {{ restaurant.restaurant_name }}{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/games.css' %}">
-{% endblock %}
+{% load static i18n %}
+{% block title %}{{ game_ui.title }} · PlayBite{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/games.css' %}">{% endblock %}
 {% block content %}
-<div class="game-shell container-fluid p-0">
-  <header class="game-top d-flex align-items-center justify-content-between px-3 py-2 shadow-sm" role="banner">
-    <div class="d-flex align-items-center gap-2">
-      {% if restaurant.logo %}
-        <img src="{{ restaurant.logo.url }}" alt="{{ restaurant.restaurant_name }}" class="game-logo" />
-      {% else %}
-        <div class="game-logo placeholder">PB</div>
-      {% endif %}
-      <div class="game-restaurant">
-        <div class="fw-bold">{{ restaurant.restaurant_name }}</div>
-        <div class="small text-muted">{{ branch.branch_name }} • Table {{ table.table_number }}</div>
-      </div>
-    </div>
-
-    <div class="game-controls d-flex align-items-center gap-2">
-      <div class="me-2 text-center">
-        <div id="game-timer" class="h5 mb-0">00:30</div>
-        <div class="small text-muted">Time</div>
-      </div>
-      <div class="me-2 text-center">
-        <div id="game-score" class="h5 mb-0">0</div>
-        <div class="small text-muted">Score</div>
-      </div>
-      <button id="muteBtn" class="btn btn-outline-secondary btn-sm" aria-pressed="false">🔊</button>
-      <button id="pauseBtn" class="btn btn-outline-secondary btn-sm">⏸</button>
-      <a href="/" class="btn btn-outline-danger btn-sm">Exit</a>
-    </div>
+<main class="pb-game-shell">
+  <header class="pb-game-header">
+    <a class="pb-game-brand" href="{% url 'play' table.qr_slug %}" aria-label="Back to {{ restaurant.restaurant_name }}">
+      <img class="pb-brand-logo" src="{% static 'images/playbite-logo.png' %}" alt="" width="38" height="38"><span>PlayBite</span>
+    </a>
+    <div class="pb-game-place"><strong>{{ restaurant.restaurant_name }}</strong><small>{{ branch.branch_name }} · Table {{ table.table_number }}</small></div>
+    <button id="mute-button" class="pb-icon-button" type="button" aria-label="Unmute game sounds" aria-pressed="true">🔇</button>
   </header>
 
-  <main class="game-area p-3" role="main">
-    <div id="game-root" class="mx-auto" style="max-width:960px;">
-      <!-- Game-specific canvas/dom will be mounted here -->
-      <div id="game-loading" class="text-center py-5">
-        <div class="spinner-border text-warning" role="status"></div>
-        <div class="mt-2">Loading game…</div>
+  <section id="game-root" class="pb-game-card" aria-live="polite">
+    <div id="game-intro" class="pb-game-intro">
+      <div class="pb-game-hero" aria-hidden="true">{{ game_ui.icon }}</div>
+      <span class="pb-eyebrow">{% translate "Today’s challenge" %}</span>
+      <h1>{{ game_ui.title }}</h1>
+      <p>{{ game_ui.description }}</p>
+      <div class="pb-howto">
+        <h2>{% translate "How to Play" %}</h2>
+        <ol>{% for step in game_ui.steps %}<li><span>{{ forloop.counter }}</span>{{ step }}</li>{% endfor %}</ol>
       </div>
+      <p class="pb-duration">⏱ {% blocktranslate count seconds=duration_seconds %}About {{ seconds }} second{% plural %}About {{ seconds }} seconds{% endblocktranslate %}</p>
+      <button id="start-game" class="pb-primary-button" type="button">{{ game_ui.cta }}</button>
+      <p id="start-error" class="pb-inline-error" role="alert"></p>
     </div>
-  </main>
-
-  <footer class="game-footer text-center py-2 small text-muted">PlayBite — Have fun and win rewards</footer>
-</div>
-
-{% block extra_js %}
+  </section>
+</main>
+{{ game_ui|json_script:"game-ui-data" }}
 <script type="module">
-  import GameEngine from '{% static 'js/games/engine.js' %}';
-
-  const slug = '{{ game.slug }}';
-  const duration = {{ duration_seconds|default:30 }};
-  const root = document.getElementById('game-root');
-
-  // Initialize engine
+  import GameEngine from "{% static 'js/games/engine.js' %}";
+  const slug = "{{ game.slug|escapejs }}";
+  const gameModules = {
+    'burger-stack': "{% static 'js/games/burger-stack.js' %}",
+    'order-rush': "{% static 'js/games/order-rush.js' %}",
+    'memory-match': "{% static 'js/games/memory-match.js' %}",
+    'pizza-slice': "{% static 'js/games/pizza-slice.js' %}",
+  };
+  const module = await import(gameModules[slug]);
   const engine = new GameEngine({
-    root,
-    duration,
-    onEnd: onGameEnd,
+    root: document.getElementById('game-root'), slug,
+    startUrl: "{% url 'games:game_start' game.slug %}",
+    submitUrl: "{% url 'games:game_submit' game.slug %}",
+    ui: JSON.parse(document.getElementById('game-ui-data').textContent),
+    GameClass: module.default,
+    strings: {todayChallenge:"{% translate 'Today’s challenge'|escapejs %}",couldNotStart:"{% translate 'We couldn’t start'|escapejs %}",connection:"{% translate 'Please check your connection and refresh safely.'|escapejs %}",refresh:"{% translate 'Refresh'|escapejs %}",timeUp:"{% translate 'Oops! Time’s up! ⏰'|escapejs %}",soClose:"{% translate 'You were so close! We’ll have another challenge waiting for you tomorrow. ✨'|escapejs %}",tomorrow:"{% translate 'Try Again Tomorrow'|escapejs %}",didIt:"{% translate 'You did it!'|escapejs %}",unlocked:"{% translate 'You’ve unlocked a treat!'|escapejs %}",validFrom:"{% translate 'Valid from'|escapejs %}",done:"{% translate 'Done'|escapejs %}",burgerComplete:"{% translate 'Burger complete! 🍔✨'|escapejs %}",orderServed:"{% translate 'Order served! ✨'|escapejs %}",allMatched:"{% translate 'All treats matched! ✨'|escapejs %}",perfectlySliced:"{% translate 'Perfectly sliced! 🍕✨'|escapejs %}"},
   });
-
-  // dynamic import of game module
-  try{
-    const module = await import(`{% static 'js/games/' %}${slug}.js`);
-    const GameClass = module.default;
-    const gameInstance = new GameClass(engine, {slug, duration});
-    await engine.load(gameInstance);
-    engine.start();
-  }catch(err){
-    console.error('Game load error', err);
-    root.innerHTML = '<div class="alert alert-danger">Failed to load the game.</div>';
-  }
-
-  // controls
-  document.getElementById('muteBtn').addEventListener('click', ()=>{ engine.toggleMute(); });
-  document.getElementById('pauseBtn').addEventListener('click', ()=>{ engine.togglePause(); document.getElementById('pauseBtn').innerText = engine.paused ? '▶' : '⏸'; });
-
-  async function onGameEnd(result){
-    // result = {score, time, status}
-    // send to server for validation
-    try{
-      const resp = await fetch(`/games/${slug}/submit/`, {
-        method:'POST',
-        headers: {'Content-Type':'application/json', 'X-CSRFToken': getCookie('csrftoken')},
-        body: JSON.stringify({score: result.score, time: result.time, status: result.status}),
-      });
-      const data = await resp.json();
-      if(resp.ok){
-        // show results
-        showResultModal(data);
-      } else {
-        alert(data.error || 'Validation failed');
-      }
-    }catch(e){
-      console.error(e);
-      alert('Network error while submitting score');
-    }
-  }
-
-  function showResultModal(data){
-    const eligible = data.eligible;
-    const el = document.createElement('div');
-    el.className = 'game-result card shadow-lg p-4 text-center mx-auto';
-    el.style.maxWidth = '520px';
-    el.innerHTML = `
-      <h3>${eligible ? 'Congratulations!' : 'Nice try!'}</h3>
-      <p class="mb-1">Score: <strong>${engine.score}</strong></p>
-      <p class="text-muted">${eligible ? 'You have unlocked a reward! Continue to claim.' : 'You did great — try again next time.'}</p>
-      <div class="d-grid gap-2 mt-3">
-        ${eligible ? `<a href="/coupons/generate/?gameplay=${data.gameplay_id}" class="btn btn-warning">Continue</a>` : '<button class="btn btn-outline-secondary" id="playAgainBtn">Play Again</button>'}
-        <a href="/" class="btn btn-light">Exit</a>
-      </div>
-    `;
-    root.innerHTML = '';
-    root.appendChild(el);
-    if(!eligible){ document.getElementById('playAgainBtn').addEventListener('click', ()=> location.reload()); }
-  }
-
-  function getCookie(name){
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== ''){
-      const cookies = document.cookie.split(';');
-      for (let i=0;i<cookies.length;i++){
-        const c = cookies[i].trim();
-        if (c.substring(0, name.length+1) === (name + '=')){
-          cookieValue = decodeURIComponent(c.substring(name.length+1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
+  document.getElementById('start-game').addEventListener('click', () => engine.begin());
+  document.getElementById('mute-button').addEventListener('click', event => engine.toggleMute(event.currentTarget));
 </script>
-{% endblock %}
 {% endblock %}

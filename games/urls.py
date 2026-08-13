@@ -5,5 +5,6 @@ app_name = 'games'
 
 urlpatterns = [
     path('<slug:slug>/', views.GamePageView.as_view(), name='game_play'),
+    path('<slug:slug>/start/', views.GameStartAPI.as_view(), name='game_start'),
     path('<slug:slug>/submit/', views.GameSubmitView.as_view(), name='game_submit'),
 ]

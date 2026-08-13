@@ -22,9 +22,17 @@ def generate_coupon_for_gameplay(gameplay):
     """Determine eligible rewards for the gameplay, pick the highest value one, create Coupon.
     Returns coupon instance or None if none available.
     """
+    from games.models import Gameplay
+    gameplay = Gameplay.objects.select_for_update().select_related(
+        'restaurant', 'game', 'customer', 'restaurant_table__branch'
+    ).get(pk=gameplay.pk)
+    existing = Coupon.objects.filter(gameplay=gameplay).first()
+    if existing:
+        return existing
+    if gameplay.result != Gameplay.Result.WON or not gameplay.completed:
+        return None
     restaurant = gameplay.restaurant
     game = gameplay.game
-    score = gameplay.score
 
     # collect candidate rewards
     rewards = Reward.objects.filter(restaurant=restaurant, is_active=True)
@@ -33,7 +41,6 @@ def generate_coupon_for_gameplay(gameplay):
     for r in rewards:
         if r.start_date and today < r.start_date: continue
         if r.end_date and today > r.end_date: continue
-        if score < r.minimum_score: continue
         # game eligibility
         if r.game_eligibility == Reward.GameEligibility.SPECIFIC:
             if not r.eligible_games.filter(pk=game.pk).exists():

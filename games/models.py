@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import uuid
 
 from playbite.models import TimeStampedModel
 
@@ -38,6 +40,13 @@ class Game(TimeStampedModel):
 
 
 class Gameplay(TimeStampedModel):
+    class Result(models.TextChoices):
+        ASSIGNED = 'assigned', _('Assigned')
+        IN_PROGRESS = 'in_progress', _('In progress')
+        WON = 'won', _('Won')
+        LOST = 'lost', _('Lost')
+
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     customer = models.ForeignKey(
         'customer.Customer',
         on_delete=models.CASCADE,
@@ -66,6 +75,13 @@ class Gameplay(TimeStampedModel):
     )
     score = models.PositiveIntegerField(_('score'), default=0)
     completed = models.BooleanField(_('completed'), default=False)
+    result = models.CharField(max_length=16, choices=Result.choices, default=Result.ASSIGNED)
+    play_date = models.DateField(default=timezone.localdate, db_index=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    deadline = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    challenge_data = models.JSONField(default=dict, blank=True)
     play_time = models.DurationField(_('play time'), null=True, blank=True)
     ip_address = models.GenericIPAddressField(_('IP address'), null=True, blank=True)
     device = models.CharField(_('device'), max_length=255, blank=True)
@@ -77,6 +93,12 @@ class Gameplay(TimeStampedModel):
         indexes = [
             models.Index(fields=['restaurant', 'game']),
             models.Index(fields=['customer', 'created_at']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['customer', 'restaurant', 'play_date'],
+                name='one_gameplay_per_customer_restaurant_day',
+            ),
         ]
 
     def __str__(self):

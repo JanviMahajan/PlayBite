@@ -131,7 +131,8 @@ class RestaurantTable(TimeStampedModel):
             # If libraries missing, do nothing silently (developer should install qrcode and pillow)
             return None
 
-        # Build URL
+        # Build URL. PUBLIC_BASE_URL is opt-in for temporary tunnel/demo sessions.
+        site_url = site_url or getattr(settings, 'PUBLIC_BASE_URL', '')
         slug = self.generate_qr_slug(save=save)
         if site_url:
             play_url = f"{site_url.rstrip('/')}/play/{slug}/"
@@ -175,7 +176,11 @@ class RestaurantTable(TimeStampedModel):
         except Exception:
             font = None
         text = "Scan to Play & Win Rewards"
-        text_w, text_h = draw.textsize(text, font=font)
+        if hasattr(draw, 'textbbox'):
+            left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+            text_w, text_h = right - left, bottom - top
+        else:
+            text_w, text_h = draw.textsize(text, font=font)
         draw.text(((width - text_w) / 2, qr_y + qr_size + 20), text, fill=(45, 45, 45), font=font)
 
         # Save to in-memory file

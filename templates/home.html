@@ -1,68 +1,21 @@
 {% extends 'base.html' %}
-
 {% block title %}PlayBite | QR engagement for restaurants{% endblock %}
-
 {% block content %}
-<div class="py-5 text-center text-white bg-primary rounded-4 shadow-sm">
-  <div class="container py-5">
-    <h1 class="display-5 fw-bold">Drive repeat visits with gamified QR experiences.</h1>
-    <p class="fs-5 text-white-75">Create table QR codes, launch rewards, and let guests unlock coupons that become valid the next day.</p>
-    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
-      <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg px-4">Get started</a>
-      <a href="#features" class="btn btn-outline-light btn-lg px-4">Learn more</a>
-    </div>
-  </div>
-</div>
-
-<section id="features" class="mt-5">
-  <h2 class="mb-4">Built for restaurants, bars, and cafés</h2>
-  <div class="row g-4">
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <h3>QR table experiences</h3>
-          <p>Generate branded QR codes for every table and connect guests to a loyalty game instantly.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <h3>Rewards that return</h3>
-          <p>Create coupons that unlock only after the next day to encourage repeat bookings and longer customer lifecycles.</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm">
-        <div class="card-body">
-          <h3>Simple restaurant setup</h3>
-          <p>Manage venues, tables, and staff from one dashboard built to scale with modern hospitality operations.</p>
-        </div>
-      </div>
-    </div>
-  </div>
+<section class="hero-section text-center">
+  <span class="eyebrow reveal"><span></span> QR-powered restaurant rewards</span>
+  <h1 class="hero-title reveal reveal-delay-1">Turn every table into<br><span>an experience worth returning for.</span></h1>
+  <p class="hero-copy reveal reveal-delay-2">Create table QR codes, launch playful challenges, and give guests rewards that bring them back tomorrow.</p>
+  <div class="hero-actions reveal reveal-delay-3"><a href="{% url 'accounts:register' %}" class="btn pb-btn-gradient btn-lg">Start with PlayBite <span>→</span></a><a href="#how-it-works" class="btn pb-btn-glass btn-lg">See how it works</a></div>
+  <div class="phone-preview reveal reveal-delay-3" aria-label="Preview of the PlayBite mobile experience"><div class="phone-speaker"></div><div class="phone-screen"><div class="float-orb orb-one"></div><div class="float-orb orb-two"></div><div class="preview-icon">🎈</div><span class="preview-kicker">YOUR FAVOURITE CAFÉ</span><h2>Play. Win. Return.</h2><p>Beat the challenge before time runs out.</p><div class="preview-reward"><small>YOUR NEXT-VISIT REWARD</small><strong>Free signature dessert</strong><span>Available from tomorrow</span></div></div></div>
 </section>
-
-<section id="rewards" class="mt-5">
-  <div class="row align-items-center">
-    <div class="col-lg-6">
-      <h2>Reward loyal guests with the right timing</h2>
-      <p class="lead">Coupons become valid the next day, so guests return for another visit rather than redeeming immediately.</p>
-      <ul class="list-unstyled">
-        <li>• Repeat-visit incentive campaigns</li>
-        <li>• Flexible reward tiers and redemption windows</li>
-        <li>• Easy coupon management for restaurant teams</li>
-      </ul>
-    </div>
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Perfect for hospitality</h5>
-          <p class="card-text">PlayBite is designed to work with busy service environments and keep guests coming back.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+<section id="features" class="content-section"><div class="section-heading"><span class="eyebrow">Designed for hospitality</span><h2>Everything you need to turn visits into loyalty</h2><p>Simple for restaurant teams. Delightful for every guest.</p></div><div class="row g-4">
+  <div class="col-md-6 col-lg-4"><article class="feature-card reveal-on-scroll"><span class="feature-icon">⌗</span><h3>QR table experiences</h3><p>Generate branded QR codes for every table and connect guests to a game instantly.</p></article></div>
+  <div class="col-md-6 col-lg-4"><article class="feature-card reveal-on-scroll"><span class="feature-icon">🎮</span><h3>Skill-based games</h3><p>Fast, polished challenges made for touch, mouse and keyboard play.</p></article></div>
+  <div class="col-md-6 col-lg-4"><article class="feature-card reveal-on-scroll"><span class="feature-icon">🎁</span><h3>Rewards that return</h3><p>Coupons unlock the next day, turning a fun moment into a genuine repeat visit.</p></article></div>
+  <div class="col-md-6 col-lg-4"><article class="feature-card reveal-on-scroll"><span class="feature-icon">↗</span><h3>Live analytics</h3><p>Understand scans, gameplay, reward performance and customer returns.</p></article></div>
+  <div class="col-md-6 col-lg-4"><article class="feature-card reveal-on-scroll"><span class="feature-icon">✦</span><h3>Your restaurant brand</h3><p>Bring your logo, colours and restaurant personality into every guest touchpoint.</p></article></div>
+  <div class="col-md-6 col-lg-4"><article class="feature-card reveal-on-scroll"><span class="feature-icon">⌂</span><h3>Built to scale</h3><p>Manage branches, tables, rewards and staff from one focused workspace.</p></article></div>
+</div></section>
+<section id="how-it-works" class="content-section"><div class="section-heading"><h2>Three taps from table to reward</h2></div><div class="row g-4"><div class="col-md-4"><article class="step-card"><b>1</b><span class="feature-icon">⌗</span><h3>Scan</h3><p>The guest scans the table QR—no account or app download required.</p></article></div><div class="col-md-4"><article class="step-card"><b>2</b><span class="feature-icon">🎮</span><h3>Play</h3><p>A quick skill challenge creates a memorable moment while they dine.</p></article></div><div class="col-md-4"><article class="step-card"><b>3</b><span class="feature-icon">🎁</span><h3>Return</h3><p>Their earned coupon activates tomorrow, giving them a reason to come back.</p></article></div></div></section>
+<section id="rewards" class="content-section"><div class="reward-banner"><div><span class="eyebrow eyebrow-light">Built for repeat visits</span><h2>Reward loyal guests with the right timing.</h2><p>Flexible reward tiers and next-day redemption windows make loyalty feel earned—not discounted.</p></div><a href="{% url 'accounts:register' %}" class="btn btn-light btn-lg">Create your first campaign</a></div></section>
 {% endblock %}

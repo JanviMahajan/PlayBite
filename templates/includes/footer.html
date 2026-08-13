@@ -1,26 +1,12 @@
-<footer class="site-footer py-4 mt-auto">
-  <div class="container-fluid container-lg px-3">
-    <div class="row g-4 text-center text-md-start">
-      <div class="col-md-6">
-        <p class="fw-semibold mb-2 text-body">PlayBite</p>
-        <p class="small mb-0">QR-driven customer engagement for restaurants and cafés.</p>
-      </div>
-      <div class="col-md-3">
-        <p class="fw-semibold mb-2 text-body">Product</p>
-        <ul class="list-unstyled small mb-0">
-          <li><a class="text-decoration-none text-muted" href="{% url 'marketing:home' %}#features">Features</a></li>
-          <li><a class="text-decoration-none text-muted" href="{% url 'accounts:register' %}">Get started</a></li>
-        </ul>
-      </div>
-      <div class="col-md-3">
-        <p class="fw-semibold mb-2 text-body">Account</p>
-        <ul class="list-unstyled small mb-0">
-          <li><a class="text-decoration-none text-muted" href="{% url 'accounts:login' %}">Login</a></li>
-          <li><a class="text-decoration-none text-muted" href="{% url 'accounts:register' %}">Register</a></li>
-        </ul>
-      </div>
+{% load static %}
+<footer class="site-footer mt-auto">
+  <div class="container-xl px-4 py-5">
+    <div class="row g-5">
+      <div class="col-sm-6 col-lg-4"><a class="pb-brand text-decoration-none" href="{% url 'marketing:home' %}"><img class="pb-brand-logo" src="{% static 'images/playbite-logo.png' %}" alt="" width="42" height="42"><span>PlayBite</span></a><p class="small text-muted mt-3 mb-0 footer-copy">QR-powered games and next-visit rewards for modern restaurants and cafés.</p></div>
+      <div class="col-6 col-sm-3 col-lg-2 ms-lg-auto"><h2 class="footer-heading">Product</h2><ul class="footer-links"><li><a href="{% url 'marketing:home' %}#features">Features</a></li><li><a href="{% url 'marketing:home' %}#rewards">Rewards</a></li><li><a href="{% url 'accounts:register' %}">Get started</a></li></ul></div>
+      <div class="col-6 col-sm-3 col-lg-2"><h2 class="footer-heading">Company</h2><ul class="footer-links"><li><a href="{% url 'marketing:home' %}#how-it-works">How it works</a></li><li><a href="{% url 'accounts:login' %}">Restaurant login</a></li><li><a href="{% url 'coupons_staff:staff_portal' %}">Staff redeem</a></li></ul></div>
+      <div class="col-sm-6 col-lg-2"><h2 class="footer-heading">Built by</h2><a class="creator-link" href="https://www.linkedin.com/in/janvi-mahajan-0000j08" target="_blank" rel="noopener noreferrer" aria-label="Janvi Mahajan on LinkedIn"><span class="linkedin-icon" aria-hidden="true">in</span><span>Janvi Mahajan</span></a></div>
     </div>
-    <hr class="my-3 border-secondary-subtle" />
-    <p class="text-center small text-muted mb-0">&copy; {% now "Y" %} PlayBite. Built for modern hospitality.</p>
+    <div class="footer-bottom"><span>&copy; {% now "Y" %} PlayBite. Built for modern hospitality.</span><span>Play. Win. Return.</span></div>
   </div>
 </footer>

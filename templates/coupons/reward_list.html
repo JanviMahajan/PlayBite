@@ -17,7 +17,7 @@
               <div class="card shadow-sm p-3">
                 <h5>{{ r.title }}</h5>
                 <p class="small text-muted">{{ r.description }}</p>
-                <p><strong>Type:</strong> {{ r.get_reward_type_display }} • <strong>Min score:</strong> {{ r.minimum_score }}</p>
+                <p><strong>Type:</strong> {{ r.get_reward_type_display }} • Awarded when the game objective is completed</p>
                 <div class="d-flex justify-content-between mt-2">
                   <a href="{% url 'coupons:reward_edit' r.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
                   <form method="post" action="{% url 'coupons:reward_delete' r.pk %}" onsubmit="return confirm('Delete reward?');">{% csrf_token %}<button class="btn btn-sm btn-danger">Delete</button></form>

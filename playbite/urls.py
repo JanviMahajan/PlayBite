@@ -8,6 +8,7 @@ from django.urls import include, path
 from restaurants.views import PlayView, PlayOffersView, PlayInstructionsView, PlayStartView
 
 urlpatterns = [
+    path('i18n/', include('django.conf.urls.i18n')),
     path('admin/', admin.site.urls),
     path('', include('marketing.urls', namespace='marketing')),
     path('dashboard/', include('restaurants.urls', namespace='restaurants')),

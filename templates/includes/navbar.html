@@ -1,29 +1,24 @@
-<nav class="navbar navbar-expand-lg navbar-dark site-navbar sticky-top" aria-label="Main navigation">
-  <div class="container-fluid container-lg">
-    <a class="navbar-brand" href="{% url 'marketing:home' %}">PlayBite</a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation menu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
-        <li class="nav-item"><a class="nav-link px-3" href="{% url 'marketing:home' %}">Home</a></li>
-        <li class="nav-item"><a class="nav-link px-3" href="{% url 'marketing:home' %}#features">Features</a></li>
-        <li class="nav-item"><a class="nav-link px-3" href="{% url 'marketing:home' %}#rewards">Rewards</a></li>
-      </ul>
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
-        <li class="nav-item">
-          <button type="button" class="btn btn-sm btn-outline-light theme-toggle ms-lg-2" data-theme-toggle aria-label="Toggle dark mode">
-            <span aria-hidden="true">🌓</span>
-          </button>
-        </li>
-        {% if user.is_authenticated %}
-          <li class="nav-item"><a class="nav-link px-3" href="{% url 'restaurants:dashboard' %}">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link px-3" href="{% url 'accounts:logout' %}">Logout</a></li>
-        {% else %}
-          <li class="nav-item"><a class="nav-link px-3" href="{% url 'accounts:login' %}">Login</a></li>
-          <li class="nav-item"><a class="nav-link btn btn-light text-dark ms-lg-2 px-3" href="{% url 'accounts:register' %}">Register</a></li>
-        {% endif %}
-      </ul>
+{% load static i18n %}
+<nav class="navbar navbar-expand-lg site-navbar sticky-top" aria-label="Main navigation">
+  <div class="container-fluid container-xl px-3 px-sm-4">
+    <a class="navbar-brand pb-brand" href="{% url 'marketing:home' %}"><img class="pb-brand-logo" src="{% static 'images/playbite-logo.png' %}" alt="" width="42" height="42"><span>PlayBite</span></a>
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#siteMenu" aria-controls="siteMenu" aria-label="Open navigation menu"><span class="navbar-toggler-icon"></span></button>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="siteMenu" aria-labelledby="siteMenuLabel">
+      <div class="offcanvas-header"><span class="pb-brand" id="siteMenuLabel"><img class="pb-brand-logo" src="{% static 'images/playbite-logo.png' %}" alt="" width="42" height="42"><span>PlayBite</span></span><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
+      <div class="offcanvas-body align-items-center">
+        <ul class="navbar-nav mx-lg-auto gap-lg-2">
+          <li class="nav-item"><a class="nav-link" href="{% url 'marketing:home' %}">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'marketing:home' %}#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'marketing:home' %}#rewards">Rewards</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'marketing:home' %}#how-it-works">How it works</a></li>
+        </ul>
+        <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center gap-2 mt-4 mt-lg-0">
+          {% include 'includes/language_switcher.html' %}
+          <button type="button" class="btn pb-icon-btn theme-toggle" data-theme-toggle aria-label="Toggle color theme"><span class="theme-icon theme-icon-moon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.2 15.4A8.5 8.5 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"/></svg></span><span class="theme-icon theme-icon-sun" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span></button>
+          {% if user.is_authenticated %}<a class="btn pb-btn-ghost" href="{% url 'restaurants:dashboard' %}">Dashboard</a><a class="btn pb-btn-dark" href="{% url 'accounts:logout' %}">Logout</a>
+          {% else %}<a class="btn pb-btn-ghost" href="{% url 'accounts:login' %}">Sign in</a><a class="btn pb-btn-dark" href="{% url 'accounts:register' %}">Get started</a>{% endif %}
+        </div>
+      </div>
     </div>
   </div>
 </nav>

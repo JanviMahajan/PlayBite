@@ -36,13 +36,12 @@ class AnalyticsService:
         return qs.count()
 
     def unique_customers(self):
-        # Gameplay sessions assume session_id stored on Gameplay.session_id
         qs = Gameplay.objects.filter(restaurant=self.restaurant, created_at__date__range=(self.start_date, self.end_date))
-        return qs.values('session_id').distinct().count()
+        return qs.values('customer_id').distinct().count()
 
     def returning_customers(self):
         qs = Gameplay.objects.filter(restaurant=self.restaurant, created_at__date__range=(self.start_date, self.end_date))
-        agg = qs.values('session_id').annotate(plays=Count('pk')).filter(plays__gt=1)
+        agg = qs.values('customer_id').annotate(plays=Count('pk')).filter(plays__gt=1)
         return agg.count()
 
     def games_played(self):

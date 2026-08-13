@@ -17,7 +17,7 @@
               <div class="p-5 bg-light">QR not yet generated</div>
             {% endif %}
           </div>
-          <p>Scan URL: <code>{{ request.build_absolute_uri object.get_qr_url }}</code></p>
+          <p>Scan URL: <code>{{ scan_url }}</code></p>
           <div class="d-flex justify-content-center gap-2">
             <a href="{% url 'restaurants:qr_download_png' object.pk %}" class="btn btn-outline-primary">Download PNG</a>
             <a href="{% url 'restaurants:qr_download_pdf' object.pk %}" class="btn btn-outline-primary">Download PDF</a>

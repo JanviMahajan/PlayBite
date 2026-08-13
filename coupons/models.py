@@ -167,6 +167,12 @@ class Coupon(TimeStampedModel):
         verbose_name_plural = _('coupons')
         ordering = ['-generated_at']
         indexes = [models.Index(fields=['coupon_code', 'generated_at']), models.Index(fields=['status'])]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['gameplay'], condition=models.Q(gameplay__isnull=False),
+                name='one_coupon_per_gameplay',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.coupon_code} — {self.reward.title}'
