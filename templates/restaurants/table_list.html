@@ -1,10 +1,8 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}Tables | PlayBite{% endblock %}
 {% block content %}
-<div class="row">
-  {% include 'restaurants/includes/sidebar.html' %}
-  <div class="col-md-9 col-lg-10">
-    {% include 'restaurants/includes/topnav.html' %}
+<div>
+  <div>
     <div class="p-4">
       <div class="d-flex justify-content-between mb-3">
         <h3>Tables</h3>
@@ -53,7 +51,7 @@
                   <td>{{ t.branch.branch_name }}</td>
                   <td>{{ t.table_number }}</td>
                   <td>{% if t.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
-                  <td>QR Pending</td>
+                  <td>{% if t.qr_image %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Pending</span>{% endif %}</td>
                   <td class="text-end">
                     <a href="{% url 'restaurants:table_edit' t.pk %}" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
                     <form method="post" action="{% url 'restaurants:table_delete' t.pk %}" class="d-inline" onsubmit="return confirm('Delete this table?');">{% csrf_token %}<button class="btn btn-sm btn-danger">Delete</button></form>

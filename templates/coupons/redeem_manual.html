@@ -1,10 +1,8 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}Redeem Coupon — Manual | PlayBite{% endblock %}
 {% block content %}
-<div class="row">
-  {% include 'restaurants/includes/sidebar.html' %}
-  <div class="col-md-9 col-lg-10">
-    {% include 'restaurants/includes/topnav.html' %}
+<div>
+  <div>
     <div class="p-4">
       <h3>Manual Coupon Redemption</h3>
       <form method="post">{% csrf_token %}

@@ -2,6 +2,7 @@ Django==6.0.8
 psycopg[binary]==3.3.4
 python-dotenv==1.2.2
 Pillow==12.3.0
+qrcode==8.2
 dj-database-url==3.0.1
 gunicorn==23.0.0
 whitenoise==6.9.0

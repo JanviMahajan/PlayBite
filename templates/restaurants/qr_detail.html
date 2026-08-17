@@ -1,18 +1,14 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}QR Detail | PlayBite{% endblock %}
 {% block content %}
-<div class="row">
-  {% include 'restaurants/includes/sidebar.html' %}
-  <div class="col-md-9 col-lg-10">
-    {% include 'restaurants/includes/topnav.html' %}
-    <div class="p-4">
+    <div class="p-2 p-md-3">
       <div class="card shadow-sm">
         <div class="card-body text-center">
           <h4>{{ object.branch.restaurant.restaurant_name }}</h4>
           <p class="text-muted">{{ object.branch.branch_name }} — Table {{ object.table_number }}</p>
           <div class="my-3">
             {% if object.qr_image %}
-              <img src="{{ object.qr_image.url }}" alt="QR" class="img-fluid" style="max-width:360px; background:white; padding:16px; border-radius:12px;" />
+              <img src="{% url 'restaurants:qr_image' object.pk %}" alt="QR code for {{ object.branch.branch_name }}, table {{ object.table_number }}" class="img-fluid" style="max-width:360px; background:white; padding:16px; border-radius:12px;" />
             {% else %}
               <div class="p-5 bg-light">QR not yet generated</div>
             {% endif %}
@@ -26,6 +22,4 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
 {% endblock %}

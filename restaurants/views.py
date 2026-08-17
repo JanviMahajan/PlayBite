@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.conf import settings
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, DetailView
@@ -11,6 +12,11 @@ import uuid
 from accounts.views import OwnerRequiredMixin
 from .models import Restaurant, Branch, RestaurantTable
 from .forms import RestaurantProfileForm, BranchForm, TableForm
+
+
+def qr_base_url(request):
+    """Return the configured public site URL, or the host used for this request."""
+    return getattr(settings, 'PUBLIC_BASE_URL', '').rstrip('/') or request.build_absolute_uri('/').rstrip('/')
 
 
 from django.core.paginator import Paginator
@@ -203,8 +209,13 @@ class TableCreateView(LoginRequiredMixin, OwnerRequiredMixin, CreateView):
         return form
 
     def form_valid(self, form):
-        messages.success(self.request, 'Table created successfully. QR Pending')
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        self.object.generate_qr_image(site_url=qr_base_url(self.request), save=True)
+        if self.object.qr_image:
+            messages.success(self.request, 'Table created successfully. QR ready to scan.')
+        else:
+            messages.warning(self.request, 'Table created, but QR generation failed. Please regenerate it.')
+        return response
 
 
 class TableUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
@@ -268,12 +279,9 @@ class QRDetailView(LoginRequiredMixin, OwnerRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        from django.conf import settings
-        public_base_url = getattr(settings, 'PUBLIC_BASE_URL', '')
-        context['scan_url'] = (
-            f"{public_base_url.rstrip('/')}{self.object.get_qr_url()}"
-            if public_base_url else self.request.build_absolute_uri(self.object.get_qr_url())
-        )
+        if not self.object.qr_image:
+            self.object.generate_qr_image(site_url=qr_base_url(self.request), save=True)
+        context['scan_url'] = f"{qr_base_url(self.request)}{self.object.get_qr_url()}"
         return context
 
 
@@ -282,12 +290,29 @@ from io import BytesIO
 from django.views import View
 
 
+class QRImageView(LoginRequiredMixin, OwnerRequiredMixin, View):
+    """Serve a QR inline without depending on public production media hosting."""
+    def get(self, request, pk):
+        table = get_object_or_404(RestaurantTable, pk=pk, branch__restaurant__owner=request.user)
+        if not table.qr_image:
+            table.generate_qr_image(site_url=qr_base_url(request), save=True)
+        if not table.qr_image:
+            raise Http404('QR not available')
+        try:
+            return FileResponse(table.qr_image.open('rb'), content_type='image/png')
+        except (FileNotFoundError, OSError, ValueError):
+            table.generate_qr_image(site_url=qr_base_url(request), save=True)
+            if not table.qr_image:
+                raise Http404('QR not available')
+            return FileResponse(table.qr_image.open('rb'), content_type='image/png')
+
+
 class QRDownloadPNGView(LoginRequiredMixin, OwnerRequiredMixin, View):
     def get(self, request, pk):
         table = get_object_or_404(RestaurantTable, pk=pk, branch__restaurant__owner=request.user)
         # If image not present, generate
         if not table.qr_image:
-            table.generate_qr_image(save=True)
+            table.generate_qr_image(site_url=qr_base_url(request), save=True)
         if not table.qr_image:
             raise Http404('QR not available')
         try:
@@ -301,7 +326,7 @@ class QRDownloadPDFView(LoginRequiredMixin, OwnerRequiredMixin, View):
         table = get_object_or_404(RestaurantTable, pk=pk, branch__restaurant__owner=request.user)
         # Ensure QR image
         if not table.qr_image:
-            table.generate_qr_image(save=True)
+            table.generate_qr_image(site_url=qr_base_url(request), save=True)
         # Build a printable A4 PDF
         try:
             from PIL import Image, ImageDraw, ImageFont
@@ -350,7 +375,7 @@ class QRRegenerateView(LoginRequiredMixin, OwnerRequiredMixin, View):
         # generate new slug and image
         table.qr_slug = uuid.uuid4()
         table.save(update_fields=['qr_slug'])
-        table.generate_qr_image(save=True)
+        table.generate_qr_image(site_url=qr_base_url(request), save=True)
         messages.success(request, 'QR regenerated successfully.')
         return redirect('restaurants:qr_list')
 

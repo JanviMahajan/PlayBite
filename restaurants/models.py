@@ -108,7 +108,7 @@ class RestaurantTable(TimeStampedModel):
     def get_qr_url(self):
         # Returns the play URL for this table's qr
         from django.urls import reverse
-        return reverse('restaurants:qr_play', args=[str(self.qr_slug)])
+        return reverse('play', args=[str(self.qr_slug)])
 
     def generate_qr_slug(self, save=True):
         """Ensure the table has a qr_slug set and return it."""

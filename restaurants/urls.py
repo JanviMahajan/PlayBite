@@ -23,6 +23,7 @@ urlpatterns = [
     # QR management
     path('qr/', views.QRListView.as_view(), name='qr_list'),
     path('qr/<int:pk>/', views.QRDetailView.as_view(), name='qr_detail'),
+    path('qr/<int:pk>/image/', views.QRImageView.as_view(), name='qr_image'),
     path('qr/download/png/<int:pk>/', views.QRDownloadPNGView.as_view(), name='qr_download_png'),
     path('qr/download/pdf/<int:pk>/', views.QRDownloadPDFView.as_view(), name='qr_download_pdf'),
     path('qr/regenerate/<int:pk>/', views.QRRegenerateView.as_view(), name='qr_regenerate'),

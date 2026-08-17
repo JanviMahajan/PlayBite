@@ -3,7 +3,7 @@
 }
 
 .dashboard-sidebar {
-  background: rgba(255,255,255,.66);
+  background: rgba(255, 250, 245, .94);
   backdrop-filter: blur(16px);
   min-height: calc(100dvh - 56px);
   border-inline-end: 1px solid var(--border);
@@ -11,7 +11,7 @@
 
 .dashboard-sidebar .nav-link,
 .dashboard-offcanvas .nav-link {
-  color: var(--text);
+  color: #211b2d;
   padding: 0.75rem 1rem;
   min-height: var(--pb-touch-min);
   display: flex;
@@ -40,6 +40,15 @@
 .dashboard-topnav {
   z-index: 1025;
   min-height: 56px;
+  color: #211b2d;
+}
+
+.dashboard-topnav .navbar-brand,
+.dashboard-topnav .dropdown-toggle,
+.dashboard-topnav .btn,
+.dashboard-sidebar,
+.dashboard-offcanvas {
+  color: #211b2d;
 }
 
 .dashboard-footer {
@@ -111,7 +120,7 @@
   animation: fadeInUp 0.4s ease both;
 }
 
-.dashboard-topnav{background:rgba(255,250,245,.8)!important;backdrop-filter:blur(18px);border-color:var(--border)!important}.dashboard-main .card{border:1px solid var(--border)!important;border-radius:20px!important;box-shadow:var(--shadow-card)!important}.dashboard-main h1,.dashboard-main h2,.dashboard-main h3{font-family:"Space Grotesk"}.dashboard-main .table{color:var(--text)}.dashboard-main .table>:not(caption)>*>*{border-color:var(--border);padding:.85rem}.dashboard-main .badge{border-radius:999px;padding:.45rem .7rem}.dashboard-main .pagination .page-link{color:var(--primary);border-color:var(--border);background:var(--surface)}
+.dashboard-topnav{background:rgba(255,250,245,.94)!important;backdrop-filter:blur(18px);border-color:var(--border)!important}.dashboard-main .card{border:1px solid var(--border)!important;border-radius:20px!important;box-shadow:var(--shadow-card)!important}.dashboard-main h1,.dashboard-main h2,.dashboard-main h3{font-family:"Space Grotesk"}.dashboard-main .table{color:var(--text)}.dashboard-main .table>:not(caption)>*>*{border-color:var(--border);padding:.85rem}.dashboard-main .badge{border-radius:999px;padding:.45rem .7rem}.dashboard-main .pagination .page-link{color:var(--primary);border-color:var(--border);background:var(--surface)}
 
 @media (max-width: 767.98px) {
   .dashboard-main {

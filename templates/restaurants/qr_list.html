@@ -1,12 +1,8 @@
 {% extends 'base_dashboard.html' %}
 {% block title %}QR Codes | PlayBite{% endblock %}
 {% block content %}
-<div class="row">
-  {% include 'restaurants/includes/sidebar.html' %}
-  <div class="col-md-9 col-lg-10">
-    {% include 'restaurants/includes/topnav.html' %}
-    <div class="p-4">
-      <div class="d-flex justify-content-between mb-3">
+    <div class="p-2 p-md-3">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <h3>QR Management</h3>
         <a href="{% url 'restaurants:table_create' %}" class="btn btn-warning text-white">Create Table (Auto-generate QR)</a>
       </div>
@@ -48,6 +44,4 @@
       {% endif %}
 
     </div>
-  </div>
-</div>
 {% endblock %}
