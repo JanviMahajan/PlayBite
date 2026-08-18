@@ -16,7 +16,10 @@ from .models import Coupon, Reward
 
 class RewardFormTests(SimpleTestCase):
     def test_reward_value_is_not_an_owner_input(self):
-        self.assertNotIn('reward_value', RewardForm().fields)
+        fields = RewardForm().fields
+        self.assertNotIn('reward_value', fields)
+        self.assertNotIn('start_date', fields)
+        self.assertNotIn('end_date', fields)
 
 
 class CustomerCouponTests(TestCase):

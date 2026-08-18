@@ -177,15 +177,17 @@ class Coupon(TimeStampedModel):
     def __str__(self):
         return f'{self.coupon_code} — {self.reward.title}'
 
-    def set_validity_windows(self):
-        """Set valid_from to the next calendar day's 00:00 (server local) and expiry accordingly."""
-        today = timezone.localdate()
-        next_day = today + timedelta(days=1)
-        # midnight next day
+    def set_validity_windows(self, played_on=None):
+        """Set the coupon window from the day after play for configured calendar days."""
+        played_on = played_on or timezone.localdate()
+        next_day = played_on + timedelta(days=1)
         vf = datetime.combine(next_day, dtime.min)
         vf = timezone.make_aware(vf, timezone.get_current_timezone())
+        valid_days = max(1, int(self.reward.coupon_valid_days or 7))
+        expiry_date = next_day + timedelta(days=valid_days - 1)
+        expiry = datetime.combine(expiry_date, dtime.max)
         self.valid_from = vf
-        self.expiry_at = vf + timedelta(days=int(self.reward.coupon_valid_days or 7))
+        self.expiry_at = timezone.make_aware(expiry, timezone.get_current_timezone())
 
     def generate_qr(self, save=True):
         """Generate a signed token for the coupon and an image if qrcode/Pillow present."""

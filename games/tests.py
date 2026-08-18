@@ -75,7 +75,16 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(first.pk,second.pk);self.assertEqual(Coupon.objects.count(),1)
         self.assertEqual(first.status,Coupon.Status.PENDING)
         self.assertEqual(timezone.localtime(first.valid_from).date(),timezone.localdate()+timedelta(days=1))
+        self.assertEqual(timezone.localtime(first.expiry_at).date(), timezone.localdate()+timedelta(days=3))
         self.assertFalse(first.is_active_now())
+
+    def test_reward_campaign_dates_do_not_override_coupon_window(self):
+        self.reward.start_date=timezone.localdate()+timedelta(days=30);self.reward.end_date=timezone.localdate()+timedelta(days=60);self.reward.coupon_valid_days=7;self.reward.save()
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        coupon=generate_coupon_for_gameplay(gameplay)
+        self.assertIsNotNone(coupon)
+        self.assertEqual(timezone.localtime(coupon.valid_from).date(),gameplay.play_date+timedelta(days=1))
+        self.assertEqual(timezone.localtime(coupon.expiry_at).date(),gameplay.play_date+timedelta(days=7))
 
     def test_coupon_token_survives_optional_qr_image_failure(self):
         gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))

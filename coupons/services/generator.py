@@ -37,10 +37,8 @@ def generate_coupon_for_gameplay(gameplay):
     # collect candidate rewards
     rewards = Reward.objects.filter(restaurant=restaurant, is_active=True)
     valid_candidates = []
-    today = timezone.localdate()
+    today = gameplay.play_date
     for r in rewards:
-        if r.start_date and today < r.start_date: continue
-        if r.end_date and today > r.end_date: continue
         # game eligibility
         if r.game_eligibility == Reward.GameEligibility.SPECIFIC:
             if not r.eligible_games.filter(pk=game.pk).exists():
@@ -63,8 +61,9 @@ def generate_coupon_for_gameplay(gameplay):
     if not valid_candidates:
         return None
 
-    # pick best by value_score
-    best = max(valid_candidates, key=lambda x: x.value_score())
+    # Reward value is not part of the customer flow; use the first eligible
+    # configured reward deterministically.
+    best = valid_candidates[0]
 
     # create coupon
     coupon_code = _unique_code('PB', 6)
@@ -79,7 +78,7 @@ def generate_coupon_for_gameplay(gameplay):
         coupon_code=coupon_code,
         status=Coupon.Status.PENDING,
     )
-    coupon.set_validity_windows()
+    coupon.set_validity_windows(gameplay.play_date)
     # The signed token is essential; generating a stored QR image is optional.
     payload = {'coupon_code': coupon.coupon_code, 'ts': timezone.now().isoformat()}
     token = signing.dumps(payload)
