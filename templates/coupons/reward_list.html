@@ -14,10 +14,12 @@
             <div class="col-md-6 col-lg-4">
               <div class="card shadow-sm p-3">
                 <h5>{{ r.title }}</h5>
+                <p>{% if r.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</p>
                 <p class="small text-muted">{{ r.description }}</p>
                 <p><strong>Type:</strong> {{ r.get_reward_type_display }} • Awarded when the game objective is completed</p>
-                <div class="d-flex justify-content-between mt-2">
+                <div class="d-flex flex-wrap gap-2 justify-content-between mt-2">
                   <a href="{% url 'coupons:reward_edit' r.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                  <form method="post" action="{% url 'coupons:reward_toggle' r.pk %}">{% csrf_token %}<button class="btn btn-sm btn-outline-primary">{% if r.is_active %}Deactivate{% else %}Activate{% endif %}</button></form>
                   <form method="post" action="{% url 'coupons:reward_delete' r.pk %}" onsubmit="return confirm('Delete reward?');">{% csrf_token %}<button class="btn btn-sm btn-danger">Delete</button></form>
                 </div>
               </div>

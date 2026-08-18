@@ -20,13 +20,18 @@ class RewardFormTests(SimpleTestCase):
         self.assertNotIn('reward_value', fields)
         self.assertNotIn('start_date', fields)
         self.assertNotIn('end_date', fields)
+        self.assertIn('game_eligibility', fields)
+        self.assertIn('eligible_games', fields)
+        self.assertIn('max_daily_redemptions', fields)
+        self.assertIn('max_total_redemptions', fields)
+        self.assertIn('is_active', fields)
 
 
 class CustomerCouponTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        owner = get_user_model().objects.create_user('coupon-owner@example.com', raw_password='x')
-        cls.restaurant = Restaurant.objects.create(owner=owner, restaurant_name='Token Cafe')
+        cls.owner = get_user_model().objects.create_user('coupon-owner@example.com', raw_password='x')
+        cls.restaurant = Restaurant.objects.create(owner=cls.owner, restaurant_name='Token Cafe')
         cls.customer = Customer.objects.create(full_name='Coupon Guest', phone_number='+919876543210')
         cls.reward = Reward.objects.create(restaurant=cls.restaurant, title='Free Cookie')
 
@@ -100,3 +105,13 @@ class CustomerCouponTests(TestCase):
         self.assertContains(response, 'حفظ القسيمة')
         message = parse_qs(urlparse(response.context['whatsapp_url']).query)['text'][0]
         self.assertIn('عرض قسيمتي', message)
+
+    def test_owner_can_deactivate_and_reactivate_reward(self):
+        self.client.force_login(self.owner)
+        url = reverse('coupons:reward_toggle', args=[self.reward.pk])
+        self.client.post(url)
+        self.reward.refresh_from_db()
+        self.assertFalse(self.reward.is_active)
+        self.client.post(url)
+        self.reward.refresh_from_db()
+        self.assertTrue(self.reward.is_active)

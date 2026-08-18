@@ -68,6 +68,15 @@ class RewardDeleteView(LoginRequiredMixin, OwnerRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
+class RewardToggleActiveView(LoginRequiredMixin, OwnerRequiredMixin, View):
+    def post(self, request, pk):
+        reward = get_object_or_404(Reward, pk=pk, restaurant__owner=request.user)
+        reward.is_active = not reward.is_active
+        reward.save(update_fields=['is_active', 'updated_at'])
+        messages.success(request, 'Reward activated.' if reward.is_active else 'Reward deactivated.')
+        return redirect('coupons:reward_list')
+
+
 class RewardDuplicateView(LoginRequiredMixin, OwnerRequiredMixin, View):
     def post(self, request, pk):
         reward = get_object_or_404(Reward, pk=pk, restaurant__owner=request.user)
