@@ -1,21 +1,15 @@
 from django import forms
 from .models import Reward
-from games.models import Game
 
 
 class RewardForm(forms.ModelForm):
     class Meta:
         model = Reward
-        fields = ['title', 'description', 'reward_type', 'game_eligibility', 'eligible_games', 'coupon_valid_days', 'max_daily_redemptions', 'max_total_redemptions', 'is_active']
-        widgets = {
-            'eligible_games': forms.CheckboxSelectMultiple(),
-        }
+        fields = ['title', 'description', 'reward_type', 'coupon_valid_days', 'is_active']
 
     def __init__(self, *args, **kwargs):
         restaurant = kwargs.pop('restaurant', None)
         super().__init__(*args, **kwargs)
-        # limit eligible_games to games in DB
-        self.fields['eligible_games'].queryset = Game.objects.filter(is_active=True)
         if not self.instance.pk:
             # defaults
             self.initial.setdefault('coupon_valid_days', 7)

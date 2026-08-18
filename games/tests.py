@@ -86,6 +86,13 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(timezone.localtime(coupon.valid_from).date(),gameplay.play_date+timedelta(days=1))
         self.assertEqual(timezone.localtime(coupon.expiry_at).date(),gameplay.play_date+timedelta(days=7))
 
+    def test_inactive_reward_blocks_coupon_until_activated(self):
+        self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        self.assertIsNone(generate_coupon_for_gameplay(gameplay))
+        self.reward.is_active=True;self.reward.save(update_fields=['is_active'])
+        self.assertIsNotNone(generate_coupon_for_gameplay(gameplay))
+
     def test_coupon_token_does_not_depend_on_stored_qr_image(self):
         gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         coupon=generate_coupon_for_gameplay(gameplay)

@@ -120,4 +120,5 @@ class GameSubmitView(View):
             'won': gameplay.result == Gameplay.Result.WON,
             'reason': reason,
             'coupon': coupon_data,
+            'coupon_error': 'no_active_reward' if gameplay.result == Gameplay.Result.WON and coupon_data is None else None,
         })

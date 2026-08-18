@@ -61,6 +61,9 @@ export default class GameEngine {
       this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero fail">🥹</div><h1>${this.strings.timeUp}</h1><p>${this.strings.soClose}</p><a class="pb-primary-button" href="/">${this.strings.tomorrow}</a></div>`; return;
     }
     this.sound('success'); this.confetti(); const coupon=result.coupon;
+    if (!coupon) {
+      this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>Game complete!</h1><p>No active reward is available for this restaurant. Please ask the restaurant team to activate one.</p><a class="pb-primary-button" href="/">Done</a></div>'; return;
+    }
     if (coupon?.view_url) { window.setTimeout(() => window.location.assign(coupon.view_url), 450); return; }
     this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>${this.strings.didIt}</h1><p>${this.strings.unlocked}</p>${coupon?`<div class="pb-coupon"><span>${coupon.reward}</span><code>${coupon.code}</code><small>${this.strings.validFrom} ${new Date(coupon.valid_from).toLocaleDateString(document.documentElement.lang)}</small></div>`:''}<a class="pb-primary-button" href="/">${this.strings.done}</a></div>`;
   }

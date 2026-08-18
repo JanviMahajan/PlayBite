@@ -1,6 +1,5 @@
 import secrets
 
-from django.utils import timezone
 from django.db import transaction
 from django.core import signing
 
@@ -33,27 +32,14 @@ def generate_coupon_for_gameplay(gameplay):
     if gameplay.result != Gameplay.Result.WON or not gameplay.completed:
         return None
     restaurant = gameplay.restaurant
-    game = gameplay.game
-    valid_candidates = []
-    for reward in Reward.objects.filter(restaurant=restaurant, is_active=True).order_by('-created_at', '-pk'):
-        if (reward.game_eligibility == Reward.GameEligibility.SPECIFIC
-                and not reward.eligible_games.filter(pk=game.pk).exists()):
-            continue
-        if reward.max_total_redemptions and reward.coupons.count() >= reward.max_total_redemptions:
-            continue
-        if reward.max_daily_redemptions:
-            day_start = timezone.make_aware(
-                timezone.datetime.combine(gameplay.play_date, timezone.datetime.min.time()),
-                timezone.get_current_timezone(),
-            )
-            day_end = day_start + timezone.timedelta(days=1)
-            if reward.coupons.filter(generated_at__gte=day_start, generated_at__lt=day_end).count() >= reward.max_daily_redemptions:
-                continue
-        valid_candidates.append(reward)
-
-    if not valid_candidates:
+    # A completed win receives the newest active reward. Activation is the
+    # single intentional availability control in the owner dashboard.
+    best = Reward.objects.filter(
+        restaurant=restaurant,
+        is_active=True,
+    ).order_by('-created_at', '-pk').first()
+    if best is None:
         return None
-    best = valid_candidates[0]
 
     # create coupon
     coupon_code = _unique_code('PB', 6)

@@ -20,10 +20,10 @@ class RewardFormTests(SimpleTestCase):
         self.assertNotIn('reward_value', fields)
         self.assertNotIn('start_date', fields)
         self.assertNotIn('end_date', fields)
-        self.assertIn('game_eligibility', fields)
-        self.assertIn('eligible_games', fields)
-        self.assertIn('max_daily_redemptions', fields)
-        self.assertIn('max_total_redemptions', fields)
+        self.assertNotIn('game_eligibility', fields)
+        self.assertNotIn('eligible_games', fields)
+        self.assertNotIn('max_daily_redemptions', fields)
+        self.assertNotIn('max_total_redemptions', fields)
         self.assertIn('is_active', fields)
 
 
