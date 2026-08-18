@@ -30,12 +30,14 @@
       </div>
     </div>
     <div class="col-6 col-xl-3">
+      <a class="text-decoration-none text-reset" href="{% url 'coupons:reward_list' %}" aria-label="Manage rewards">
       <div class="card shadow-sm h-100 stat-card">
         <div class="card-body">
           <h6 class="text-muted">Total Rewards</h6>
           <h3 class="mb-0">{{ stats.total_rewards }}</h3>
         </div>
       </div>
+      </a>
     </div>
     <div class="col-6 col-xl-3">
       <div class="card shadow-sm h-100 stat-card">

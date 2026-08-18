@@ -6,6 +6,8 @@ from django.views.generic import TemplateView, DetailView
 from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView
 from django.views.generic.list import ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Count
+from django.utils import timezone
 
 import uuid
 
@@ -32,17 +34,33 @@ class DashboardView(LoginRequiredMixin, OwnerRequiredMixin, TemplateView):
         except Restaurant.DoesNotExist:
             context['restaurant'] = None
 
-        # Placeholder statistics
-        stats = {
-            'total_tables': 42,
-            'active_branches': 3,
-            'total_rewards': 12,
-            'games_played_today': 128,
-            'coupons_generated': 34,
-            'coupons_redeemed': 9,
-            'returning_customers': 21,
-            'qr_scans_today': 76,
-        }
+        restaurant = context['restaurant']
+        if restaurant:
+            from games.models import Gameplay
+            from .models import QRScan
+
+            today = timezone.localdate()
+            gameplays = Gameplay.objects.filter(restaurant=restaurant)
+            stats = {
+                'total_tables': RestaurantTable.objects.filter(branch__restaurant=restaurant).count(),
+                'active_branches': Branch.objects.filter(restaurant=restaurant, is_active=True).count(),
+                'total_rewards': restaurant.rewards.count(),
+                'games_played_today': gameplays.filter(play_date=today).count(),
+                'coupons_generated': restaurant.coupons.count(),
+                'coupons_redeemed': restaurant.coupons.filter(status='redeemed').count(),
+                'returning_customers': gameplays.values('customer_id').annotate(
+                    visits=Count('id')
+                ).filter(visits__gt=1).count(),
+                'qr_scans_today': QRScan.objects.filter(
+                    table__branch__restaurant=restaurant,
+                    scanned_at__date=today,
+                ).count(),
+            }
+        else:
+            stats = {key: 0 for key in (
+                'total_tables', 'active_branches', 'total_rewards', 'games_played_today',
+                'coupons_generated', 'coupons_redeemed', 'returning_customers', 'qr_scans_today',
+            )}
         context['stats'] = stats
 
         # Placeholder chart data (structured for easy replacement with real data)
@@ -385,7 +403,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 
-from django.utils import timezone
 from django.views import View
 from django.http import JsonResponse
 

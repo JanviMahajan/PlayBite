@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from customer.models import Customer
+from coupons.models import Reward
 from games.models import Gameplay
 from .models import Branch, Restaurant, RestaurantTable
 from .forms import BranchForm
@@ -58,3 +59,21 @@ class BranchFormTests(TestCase):
         form = BranchForm()
         self.assertNotIn('latitude', form.fields)
         self.assertNotIn('longitude', form.fields)
+
+
+class DashboardStatsTests(TestCase):
+    def test_dashboard_uses_owner_database_counts_and_links_rewards(self):
+        owner = get_user_model().objects.create_user('stats@example.com', raw_password='x')
+        restaurant = Restaurant.objects.create(owner=owner, restaurant_name='Stats Cafe')
+        branch = Branch.objects.create(restaurant=restaurant, branch_name='Main')
+        with patch.object(RestaurantTable, 'generate_qr_image'):
+            RestaurantTable.objects.create(branch=branch, table_number='1')
+        Reward.objects.create(restaurant=restaurant, title='Free Coffee')
+        Reward.objects.create(restaurant=restaurant, title='Free Cookie')
+        self.client.force_login(owner)
+        response = self.client.get(reverse('restaurants:dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['stats']['total_tables'], 1)
+        self.assertEqual(response.context['stats']['active_branches'], 1)
+        self.assertEqual(response.context['stats']['total_rewards'], 2)
+        self.assertContains(response, reverse('coupons:reward_list'))
