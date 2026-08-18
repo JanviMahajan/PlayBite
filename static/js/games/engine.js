@@ -57,6 +57,7 @@ export default class GameEngine {
       this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero fail">🥹</div><h1>${this.strings.timeUp}</h1><p>${this.strings.soClose}</p><a class="pb-primary-button" href="/">${this.strings.tomorrow}</a></div>`; return;
     }
     this.sound('success'); this.confetti(); const coupon=result.coupon;
+    if (coupon?.view_url) { window.setTimeout(() => window.location.assign(coupon.view_url), 450); return; }
     this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>${this.strings.didIt}</h1><p>${this.strings.unlocked}</p>${coupon?`<div class="pb-coupon"><span>${coupon.reward}</span><code>${coupon.code}</code><small>${this.strings.validFrom} ${new Date(coupon.valid_from).toLocaleDateString(document.documentElement.lang)}</small></div>`:''}<a class="pb-primary-button" href="/">${this.strings.done}</a></div>`;
   }
   confetti(){for(let i=0;i<36;i++){const p=document.createElement('i');p.className='confetti-piece';p.style.left=Math.random()*100+'vw';p.style.background=['#f36b32','#f8b84e','#30b978'][i%3];p.style.animationDelay=Math.random()*.3+'s';document.body.append(p);setTimeout(()=>p.remove(),2400);}}

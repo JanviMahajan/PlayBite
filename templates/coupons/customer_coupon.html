@@ -1,0 +1,30 @@
+{% extends 'base_clean.html' %}
+{% load static i18n %}
+{% block title %}{% translate "View Coupon" %} · PlayBite{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/coupon.css' %}">{% endblock %}
+{% block content %}
+<main class="customer-coupon-page">
+  <article class="customer-coupon-card" aria-labelledby="coupon-title">
+    <div class="coupon-celebration" aria-hidden="true">🎉</div>
+    <p class="coupon-kicker">{% translate "You Won!" %}</p>
+    <h1 id="coupon-title">{{ coupon.reward.title }}</h1>
+    <p class="coupon-restaurant">{{ coupon.restaurant.restaurant_name }}</p>
+
+    <div class="coupon-code"><span>{% translate "Coupon" %}</span><strong>{{ coupon.coupon_code }}</strong></div>
+    <img class="coupon-qr" src="{{ qr_url }}" width="260" height="260" alt="{% translate 'Coupon QR code for staff' %}">
+
+    <dl class="coupon-dates">
+      <div><dt>{% translate "Generated" %}</dt><dd>{{ coupon.generated_at|date:"DATE_FORMAT" }}</dd></div>
+      <div><dt>{% translate "Valid From" %}</dt><dd>{{ coupon.valid_from|date:"DATE_FORMAT" }}</dd></div>
+      <div><dt>{% translate "Expires" %}</dt><dd>{{ coupon.expiry_at|date:"DATE_FORMAT" }}</dd></div>
+    </dl>
+    <p class="coupon-status coupon-status-{{ status_key }}">{{ status_label }}</p>
+
+    <div class="coupon-actions">
+      <a class="coupon-action whatsapp-action" href="{{ whatsapp_url }}" target="_blank" rel="noopener noreferrer">💬 {% translate "WhatsApp" %}</a>
+      <a class="coupon-action save-action" href="{{ download_url }}">↓ {% translate "Save Coupon" %}</a>
+    </div>
+    <p class="coupon-note">{% translate "Keep this coupon for your next visit ✨" %}</p>
+  </article>
+</main>
+{% endblock %}

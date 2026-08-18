@@ -81,8 +81,8 @@ class GameplayFlowTests(TestCase):
         gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         coupon=generate_coupon_for_gameplay(gameplay)
         now=timezone.now();Coupon.objects.filter(pk=coupon.pk).update(status=Coupon.Status.ACTIVE,valid_from=now-timedelta(seconds=1),expiry_at=now+timedelta(days=1));coupon.refresh_from_db()
-        first,redemption=redeem_coupon(self.restaurant.owner,coupon_code=coupon.coupon_code,branch=self.branch)
-        second,reason=redeem_coupon(self.restaurant.owner,coupon_code=coupon.coupon_code,branch=self.branch)
+        first,redemption=redeem_coupon(self.restaurant.owner,qr_token=coupon.qr_token,branch=self.branch)
+        second,reason=redeem_coupon(self.restaurant.owner,qr_token=coupon.qr_token,branch=self.branch)
         self.assertTrue(first);self.assertEqual(redemption.coupon_id,coupon.pk);self.assertFalse(second);self.assertEqual(reason,'already_redeemed')
 
     def test_bad_evidence_cannot_claim_a_win(self):
@@ -128,5 +128,6 @@ class GameplayFlowTests(TestCase):
         gameplay.refresh_from_db();payload={'outcome':'completed','evidence':self.winning_evidence(gameplay)}
         result=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json')
         self.assertEqual(result.status_code,200);self.assertTrue(result.json()['won']);self.assertEqual(Coupon.objects.count(),1)
+        self.assertIn('/coupon/view/', result.json()['coupon']['view_url'])
         duplicate=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json');self.assertEqual(duplicate.status_code,409)
         refreshed=self.client.get(reverse('games:game_play',args=[gameplay.game.slug]));self.assertContains(refreshed,'That’s all for today!')

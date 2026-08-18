@@ -6,7 +6,7 @@
 <main class="play-page"><section class="identity-card already-card">
   <div class="identity-icon">{% if gameplay.result == 'won' %}🎉{% else %}🌙{% endif %}</div>
   <h1>{% translate "That’s all for today!" %} 🌙</h1><p>{% translate "You’ve already played today’s PlayBite challenge." %} {% translate "Come back tomorrow for another chance to win! 🍔✨" %}</p>
-  {% if coupon %}<div class="existing-coupon"><span>{% translate "Your unlocked treat" %}</span><strong>{{ coupon.reward.title }}</strong><code>{{ coupon.coupon_code }}</code><small>{% translate "Valid from" %} {{ coupon.valid_from|date:"DATE_FORMAT" }}</small></div>{% endif %}
+  {% if coupon %}<div class="existing-coupon"><span>{% translate "Your unlocked treat" %}</span><strong>{{ coupon.reward.title }}</strong><code>{{ coupon.coupon_code }}</code><small>{% translate "Valid from" %} {{ coupon.valid_from|date:"DATE_FORMAT" }}</small></div>{% if coupon.qr_token %}<a class="play-primary" href="{% url 'coupon_public:view' coupon.qr_token %}">{% translate "View Coupon" %}</a>{% endif %}{% endif %}
   {% if gameplay.restaurant_table %}<a class="play-primary" href="{% url 'play' gameplay.restaurant_table.qr_slug %}">{% translate "Back to restaurant" %}</a>{% endif %}
 </section></main>
 {% endblock %}

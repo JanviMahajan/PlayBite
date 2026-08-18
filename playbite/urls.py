@@ -18,6 +18,7 @@ urlpatterns = [
     path('play/<uuid:qr_slug>/instructions/', PlayInstructionsView.as_view(), name='play_instructions'),
     path('play/<uuid:qr_slug>/start/', PlayStartView.as_view(), name='play_start'),
     path('games/', include('games.urls', namespace='games')),
+    path('coupon/', include(('coupons.public_urls', 'coupon_public'), namespace='coupon_public')),
     path('dashboard/rewards/', include('coupons.urls', namespace='coupons')),
     path('staff/', include(('coupons.staff_urls', 'coupons_staff'), namespace='coupons_staff')),
     path('dashboard/analytics/', include(('analytics.urls','analytics'), namespace='analytics')),

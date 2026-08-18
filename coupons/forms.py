@@ -6,7 +6,7 @@ from games.models import Game
 class RewardForm(forms.ModelForm):
     class Meta:
         model = Reward
-        fields = ['title', 'description', 'reward_type', 'reward_value', 'game_eligibility', 'eligible_games', 'start_date', 'end_date', 'coupon_valid_days', 'max_daily_redemptions', 'max_total_redemptions', 'is_active']
+        fields = ['title', 'description', 'reward_type', 'game_eligibility', 'eligible_games', 'start_date', 'end_date', 'coupon_valid_days', 'max_daily_redemptions', 'max_total_redemptions', 'is_active']
         widgets = {
             'start_date': forms.DateInput(attrs={'type':'date'}),
             'end_date': forms.DateInput(attrs={'type':'date'}),

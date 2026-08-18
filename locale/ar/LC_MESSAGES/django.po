@@ -160,7 +160,7 @@ msgid "Active"
 msgstr ""
 
 msgid "Expired"
-msgstr ""
+msgstr "منتهية الصلاحية"
 
 msgid "Redeemed"
 msgstr ""
@@ -215,6 +215,66 @@ msgstr ""
 
 msgid "reason"
 msgstr ""
+
+msgid "View Coupon"
+msgstr "عرض القسيمة"
+
+msgid "Save Coupon"
+msgstr "حفظ القسيمة"
+
+msgid "WhatsApp"
+msgstr "واتساب"
+
+msgid "Keep this coupon for your next visit ✨"
+msgstr "احتفظ بهذه القسيمة لزيارتك القادمة ✨"
+
+msgid "Ready to Use"
+msgstr "جاهزة للاستخدام"
+
+msgid "Available Tomorrow"
+msgstr "متاحة غدًا"
+
+msgid "Already Redeemed"
+msgstr "تم استخدامها بالفعل"
+
+msgid "You Won!"
+msgstr "لقد فزت!"
+
+msgid "Coupon"
+msgstr "القسيمة"
+
+msgid "Coupon QR code for staff"
+msgstr "رمز QR للقسيمة للموظفين"
+
+msgid "Generated"
+msgstr "تاريخ الإصدار"
+
+msgid "Valid From"
+msgstr "صالحة من"
+
+msgid "Expires"
+msgstr "تنتهي في"
+
+msgid "🎉 I won a PlayBite treat!"
+msgstr "🎉 لقد ربحت مكافأة من PlayBite!"
+
+#, python-format
+msgid "🎟 Coupon: %(code)s"
+msgstr "🎟 القسيمة: %(code)s"
+
+#, python-format
+msgid "📅 Valid from: %(date)s"
+msgstr "📅 صالحة من: %(date)s"
+
+#, python-format
+msgid "⏳ Expires: %(date)s"
+msgstr "⏳ تنتهي في: %(date)s"
+
+msgid "View my coupon:"
+msgstr "عرض قسيمتي:"
+
+msgid "I'll be back for my treat! ✨"
+msgstr "سأعود للحصول على مكافأتي! ✨"
 
 msgid "redemption"
 msgstr ""

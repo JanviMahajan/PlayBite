@@ -7,6 +7,7 @@ from django.urls import reverse
 from customer.models import Customer
 from games.models import Gameplay
 from .models import Branch, Restaurant, RestaurantTable
+from .forms import BranchForm
 
 
 class CustomerEntryTests(TestCase):
@@ -50,3 +51,10 @@ class CustomerEntryTests(TestCase):
         self.assertContains(list_response, 'dashboard-sidebar', count=1)
         self.assertContains(detail_response, 'dashboard-topnav', count=1)
         self.assertContains(detail_response, 'dashboard-sidebar', count=1)
+
+
+class BranchFormTests(TestCase):
+    def test_location_coordinates_are_not_owner_inputs(self):
+        form = BranchForm()
+        self.assertNotIn('latitude', form.fields)
+        self.assertNotIn('longitude', form.fields)

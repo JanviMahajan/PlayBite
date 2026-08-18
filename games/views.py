@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.views import View
 
 from coupons.services.generator import generate_coupon_for_gameplay
+from coupons.services.presentation import public_coupon_url
 from .models import Gameplay
 from .services.gameplay import GAME_UI, start_gameplay, submit_gameplay
 
@@ -97,6 +98,7 @@ class GameSubmitView(View):
                     'valid_from': coupon.valid_from.isoformat() if coupon.valid_from else None,
                     'expiry_at': coupon.expiry_at.isoformat() if coupon.expiry_at else None,
                     'qr_url': coupon.qr_image.url if coupon.qr_image else None,
+                    'view_url': public_coupon_url(request, coupon),
                 }
         return JsonResponse({
             'ok': True,

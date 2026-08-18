@@ -37,15 +37,13 @@ class BranchForm(forms.ModelForm):
 
     class Meta:
         model = Branch
-        fields = ['branch_name', 'phone', 'address', 'city', 'state', 'country', 'latitude', 'longitude', 'is_active']
+        fields = ['branch_name', 'phone', 'address', 'city', 'state', 'country', 'is_active']
         widgets = {
             'branch_name': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.TextInput(attrs={'class': 'form-control'}),
             'city': forms.TextInput(attrs={'class': 'form-control'}),
             'state': forms.TextInput(attrs={'class': 'form-control'}),
             'country': forms.TextInput(attrs={'class': 'form-control'}),
-            'latitude': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.000001'}),
-            'longitude': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.000001'}),
         }
 
 
