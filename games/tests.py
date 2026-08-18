@@ -77,6 +77,20 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(timezone.localtime(first.valid_from).date(),timezone.localdate()+timedelta(days=1))
         self.assertFalse(first.is_active_now())
 
+    def test_coupon_token_survives_optional_qr_image_failure(self):
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        with patch('qrcode.QRCode.make', side_effect=OSError('storage unavailable')):
+            coupon=generate_coupon_for_gameplay(gameplay)
+        coupon.refresh_from_db()
+        self.assertTrue(coupon.qr_token)
+
+    def test_refresh_recovers_single_coupon_for_saved_win(self):
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        session=self.client.session;session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk};session.save()
+        response=self.client.get(reverse('games:game_play',args=[gameplay.game.slug]))
+        self.assertEqual(response.status_code,200);self.assertEqual(Coupon.objects.filter(gameplay=gameplay).count(),1)
+        self.assertContains(response,'View Coupon')
+
     def test_coupon_activates_next_day_and_redeems_exactly_once(self):
         gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         coupon=generate_coupon_for_gameplay(gameplay)

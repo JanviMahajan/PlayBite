@@ -80,16 +80,17 @@ def generate_coupon_for_gameplay(gameplay):
         status=Coupon.Status.PENDING,
     )
     coupon.set_validity_windows()
-    # generate QR image (may be no-op if libs missing)
+    # The signed token is essential; generating a stored QR image is optional.
+    payload = {'coupon_code': coupon.coupon_code, 'ts': timezone.now().isoformat()}
+    token = signing.dumps(payload)
+    coupon.qr_token = token
+    # Generate the legacy stored QR image when storage is available. Customer
+    # coupon pages generate their QR from qr_token and do not depend on this file.
     try:
         import qrcode
         from io import BytesIO
         qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=10, border=2)
-        payload = {'coupon_code': coupon.coupon_code, 'ts': timezone.now().isoformat()}
-        token = signing.dumps(payload)
-        coupon.qr_token = token
-        redemption_url = f"/coupon/redeem/{token}/"
-        qr.add_data(redemption_url)
+        qr.add_data(token)
         qr.make(fit=True)
         img = qr.make_image(fill_color="#111111", back_color="white").convert('RGB')
         bio = BytesIO(); img.save(bio, format='PNG'); bio.seek(0)

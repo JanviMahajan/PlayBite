@@ -7,7 +7,8 @@ export default class GameEngine {
   csrf() { return document.cookie.split('; ').find(v => v.startsWith('csrftoken='))?.split('=').slice(1).join('=') || ''; }
   async request(url, body = {}) {
     const response = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':decodeURIComponent(this.csrf())}, body:JSON.stringify(body)});
-    const data = await response.json();
+    let data = {};
+    try { data = await response.json(); } catch (_) { /* Preserve HTTP status for safe recovery. */ }
     if (!response.ok) throw Object.assign(new Error(data.error || 'Request failed'), {status:response.status});
     return data;
   }
@@ -50,7 +51,10 @@ export default class GameEngine {
   async finish(outcome, evidence) {
     if (this.ending) return; this.ending=true;this.running=false;cancelAnimationFrame(this.frame);this.game?.destroy?.();
     try { const result=await this.request(this.submitUrl,{outcome,evidence}); this.showResult(result); }
-    catch { this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero">📡</div><h1>Result saved?</h1><p>We lost the connection while checking. Refresh this page to safely see today’s final status.</p><button class="pb-primary-button" onclick="location.reload()">Refresh</button></div>'; }
+    catch (error) {
+      if (error.status === 409 || error.status >= 500) { window.location.reload(); return; }
+      this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero">📡</div><h1>Result saved?</h1><p>We lost the connection while checking. Refresh this page to safely see today’s final status.</p><button class="pb-primary-button" onclick="location.reload()">Refresh</button></div>';
+    }
   }
   showResult(result) {
     if (!result.won) {

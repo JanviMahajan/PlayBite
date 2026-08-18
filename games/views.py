@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.http import Http404, JsonResponse
 from django.shortcuts import render
@@ -9,6 +10,8 @@ from coupons.services.generator import generate_coupon_for_gameplay
 from coupons.services.presentation import public_coupon_url
 from .models import Gameplay
 from .services.gameplay import GAME_UI, start_gameplay, submit_gameplay
+
+logger = logging.getLogger(__name__)
 
 
 def _session_gameplay(request, slug=None):
@@ -36,6 +39,11 @@ class GamePageView(View):
                 and timezone.now() > gameplay.deadline and not gameplay.submitted_at):
             gameplay, _, _ = submit_gameplay(gameplay.pk, gameplay.customer_id, False, {})
         coupon = gameplay.coupons.first()
+        if gameplay.result == Gameplay.Result.WON and coupon is None:
+            try:
+                coupon = generate_coupon_for_gameplay(gameplay)
+            except Exception:
+                logger.exception('Could not recover coupon for completed gameplay %s', gameplay.pk)
         if gameplay.result in (Gameplay.Result.WON, Gameplay.Result.LOST):
             return render(request, 'games/already_played.html', {'gameplay': gameplay, 'coupon': coupon})
         table = gameplay.restaurant_table
@@ -90,16 +98,23 @@ class GameSubmitView(View):
             return JsonResponse({'ok': False, 'error': reason}, status=409)
         coupon_data = None
         if gameplay.result == Gameplay.Result.WON:
-            coupon = generate_coupon_for_gameplay(gameplay)
+            try:
+                coupon = generate_coupon_for_gameplay(gameplay)
+            except Exception:
+                logger.exception('Could not generate coupon for gameplay %s', gameplay.pk)
+                coupon = None
             if coupon:
-                coupon_data = {
-                    'code': coupon.coupon_code,
-                    'reward': coupon.reward.title,
-                    'valid_from': coupon.valid_from.isoformat() if coupon.valid_from else None,
-                    'expiry_at': coupon.expiry_at.isoformat() if coupon.expiry_at else None,
-                    'qr_url': coupon.qr_image.url if coupon.qr_image else None,
-                    'view_url': public_coupon_url(request, coupon),
-                }
+                try:
+                    coupon_data = {
+                        'code': coupon.coupon_code,
+                        'reward': coupon.reward.title,
+                        'valid_from': coupon.valid_from.isoformat() if coupon.valid_from else None,
+                        'expiry_at': coupon.expiry_at.isoformat() if coupon.expiry_at else None,
+                        'qr_url': coupon.qr_image.url if coupon.qr_image else None,
+                        'view_url': public_coupon_url(request, coupon),
+                    }
+                except Exception:
+                    logger.exception('Could not build coupon response for gameplay %s', gameplay.pk)
         return JsonResponse({
             'ok': True,
             'won': gameplay.result == Gameplay.Result.WON,
