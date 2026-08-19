@@ -3,8 +3,9 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 from django.test import Client, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -107,6 +108,16 @@ class GameplayFlowTests(TestCase):
         coupon=generate_coupon_for_gameplay(gameplay)
         self.assertEqual(coupon.reward,newest)
         self.assertEqual(Coupon.objects.filter(gameplay=gameplay).count(),1)
+
+    def test_coupon_lock_query_does_not_outer_join_nullable_table(self):
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        with CaptureQueriesContext(connection) as queries:
+            generate_coupon_for_gameplay(gameplay)
+        gameplay_select=next(
+            query['sql'] for query in queries.captured_queries
+            if 'FROM "games_gameplay"' in query['sql']
+        )
+        self.assertNotIn('LEFT OUTER JOIN "restaurants_restauranttable"', gameplay_select)
 
     def test_inactive_reward_blocks_coupon_until_activated(self):
         self.reward.is_active=False;self.reward.save(update_fields=['is_active'])

@@ -48,8 +48,10 @@ def generate_coupon_for_gameplay(gameplay):
     Returns coupon instance or None if none available.
     """
     from games.models import Gameplay
+    # Lock only the non-null Gameplay row. PostgreSQL rejects FOR UPDATE when
+    # the same query outer-joins the nullable restaurant_table relationship.
     gameplay = Gameplay.objects.select_for_update().select_related(
-        'restaurant', 'game', 'customer', 'restaurant_table__branch'
+        'restaurant', 'game', 'customer'
     ).get(pk=gameplay.pk)
     existing = Coupon.objects.filter(gameplay=gameplay).first()
     if existing:
@@ -57,13 +59,18 @@ def generate_coupon_for_gameplay(gameplay):
     if gameplay.result != Gameplay.Result.WON or not gameplay.completed:
         return None
     restaurant = gameplay.restaurant
-    if (gameplay.restaurant_table_id
-            and gameplay.restaurant_table.branch.restaurant_id != gameplay.restaurant_id):
+    table = None
+    if gameplay.restaurant_table_id:
+        from restaurants.models import RestaurantTable
+        table = RestaurantTable.objects.select_related('branch').get(
+            pk=gameplay.restaurant_table_id
+        )
+    if table and table.branch.restaurant_id != gameplay.restaurant_id:
         logger.error(
             'Gameplay %s restaurant %s does not match table restaurant %s',
             gameplay.pk,
             gameplay.restaurant_id,
-            gameplay.restaurant_table.branch.restaurant_id,
+            table.branch.restaurant_id,
         )
         return None
 
@@ -86,8 +93,8 @@ def generate_coupon_for_gameplay(gameplay):
     coupon = Coupon.objects.create(
         customer=gameplay.customer,
         restaurant=restaurant,
-        branch=gameplay.restaurant_table.branch if gameplay.restaurant_table else None,
-        table=gameplay.restaurant_table,
+        branch=table.branch if table else None,
+        table=table,
         reward=best,
         gameplay=gameplay,
         coupon_code=coupon_code,
