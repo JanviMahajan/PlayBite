@@ -18,13 +18,22 @@ class RewardFormTests(SimpleTestCase):
     def test_reward_value_is_not_an_owner_input(self):
         fields = RewardForm().fields
         self.assertNotIn('reward_value', fields)
-        self.assertNotIn('start_date', fields)
-        self.assertNotIn('end_date', fields)
+        self.assertIn('start_date', fields)
+        self.assertIn('end_date', fields)
         self.assertNotIn('game_eligibility', fields)
         self.assertNotIn('eligible_games', fields)
         self.assertNotIn('max_daily_redemptions', fields)
         self.assertNotIn('max_total_redemptions', fields)
         self.assertIn('is_active', fields)
+
+    def test_end_date_cannot_precede_start_date(self):
+        form = RewardForm(data={
+            'title': 'Treat', 'description': '', 'reward_type': Reward.RewardType.FREE_ITEM,
+            'start_date': '2026-08-20', 'end_date': '2026-08-19',
+            'coupon_valid_days': 7, 'is_active': True,
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn('end_date', form.errors)
 
 
 class CustomerCouponTests(TestCase):

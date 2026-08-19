@@ -466,10 +466,10 @@ class PlayOffersView(View):
         if not (restaurant.is_active and table.branch.is_active and table.is_active):
             return render(request, 'restaurants/play_invalid.html', status=404)
 
-        # fetch active rewards
+        # Use the same availability rules as coupon generation.
         try:
-            from coupons.models import Reward
-            rewards = Reward.objects.filter(restaurant=restaurant, is_active=True)
+            from coupons.services.generator import eligible_rewards_for_restaurant
+            rewards = eligible_rewards_for_restaurant(restaurant)
         except Exception:
             rewards = []
 

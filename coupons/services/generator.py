@@ -23,15 +23,22 @@ def _unique_code(prefix='PB', length=6):
             return code
 
 
-def eligible_rewards_for_gameplay(gameplay, at_date=None):
-    """Return rewards available to win for this gameplay's restaurant."""
-    at_date = at_date or gameplay.play_date or timezone.localdate()
+def eligible_rewards_for_restaurant(restaurant, at_date=None):
+    """Return the single source of truth for currently available rewards."""
+    at_date = at_date or timezone.localdate()
     return Reward.objects.filter(
-        restaurant_id=gameplay.restaurant_id,
+        restaurant=restaurant,
         is_active=True,
     ).filter(
         Q(start_date__isnull=True) | Q(start_date__lte=at_date),
         Q(end_date__isnull=True) | Q(end_date__gte=at_date),
+    )
+
+
+def eligible_rewards_for_gameplay(gameplay, at_date=None):
+    return eligible_rewards_for_restaurant(
+        gameplay.restaurant_id,
+        at_date=at_date or gameplay.play_date,
     )
 
 

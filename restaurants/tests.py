@@ -3,6 +3,8 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
 from customer.models import Customer
 from coupons.models import Reward
@@ -39,6 +41,21 @@ class CustomerEntryTests(TestCase):
             self.table.get_qr_url(),
             reverse('play', args=[self.table.qr_slug]),
         )
+
+    def test_public_offers_match_gameplay_reward_availability(self):
+        current = Reward.objects.create(restaurant=self.restaurant, title='Current', is_active=True)
+        Reward.objects.create(
+            restaurant=self.restaurant, title='Future', is_active=True,
+            start_date=timezone.localdate() + timedelta(days=1),
+        )
+        Reward.objects.create(
+            restaurant=self.restaurant, title='Expired', is_active=True,
+            end_date=timezone.localdate() - timedelta(days=1),
+        )
+        response = self.client.get(reverse('play_offers', args=[self.table.qr_slug]))
+        self.assertContains(response, current.title)
+        self.assertNotContains(response, 'Future')
+        self.assertNotContains(response, 'Expired')
 
     def test_qr_pages_render_dashboard_shell_once(self):
         self.client.force_login(self.owner)
