@@ -97,6 +97,7 @@ class GameSubmitView(View):
         if not accepted:
             return JsonResponse({'ok': False, 'error': reason}, status=409)
         coupon_data = None
+        coupon_error = None
         if gameplay.result == Gameplay.Result.WON:
             try:
                 coupon = generate_coupon_for_gameplay(gameplay)
@@ -104,21 +105,25 @@ class GameSubmitView(View):
                 logger.exception('Could not generate coupon for gameplay %s', gameplay.pk)
                 coupon = None
             if coupon:
+                coupon_data = {
+                    'code': coupon.coupon_code,
+                    'reward': coupon.reward.title,
+                    'valid_from': coupon.valid_from.isoformat() if coupon.valid_from else None,
+                    'expiry_at': coupon.expiry_at.isoformat() if coupon.expiry_at else None,
+                    'qr_url': coupon.qr_image.url if coupon.qr_image else None,
+                    'view_url': None,
+                }
                 try:
-                    coupon_data = {
-                        'code': coupon.coupon_code,
-                        'reward': coupon.reward.title,
-                        'valid_from': coupon.valid_from.isoformat() if coupon.valid_from else None,
-                        'expiry_at': coupon.expiry_at.isoformat() if coupon.expiry_at else None,
-                        'qr_url': coupon.qr_image.url if coupon.qr_image else None,
-                        'view_url': public_coupon_url(request, coupon),
-                    }
+                    coupon_data['view_url'] = public_coupon_url(request, coupon)
                 except Exception:
                     logger.exception('Could not build coupon response for gameplay %s', gameplay.pk)
+                    coupon_error = 'coupon_url_unavailable'
+            else:
+                coupon_error = 'no_active_reward'
         return JsonResponse({
             'ok': True,
             'won': gameplay.result == Gameplay.Result.WON,
             'reason': reason,
             'coupon': coupon_data,
-            'coupon_error': 'no_active_reward' if gameplay.result == Gameplay.Result.WON and coupon_data is None else None,
+            'coupon_error': coupon_error,
         })

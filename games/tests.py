@@ -78,13 +78,35 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(timezone.localtime(first.expiry_at).date(), timezone.localdate()+timedelta(days=3))
         self.assertFalse(first.is_active_now())
 
-    def test_reward_campaign_dates_do_not_override_coupon_window(self):
-        self.reward.start_date=timezone.localdate()+timedelta(days=30);self.reward.end_date=timezone.localdate()+timedelta(days=60);self.reward.coupon_valid_days=7;self.reward.save()
+    def test_reward_dates_are_inclusive_and_coupon_window_starts_tomorrow(self):
+        self.reward.start_date=timezone.localdate();self.reward.end_date=timezone.localdate();self.reward.coupon_valid_days=7;self.reward.save()
         gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         coupon=generate_coupon_for_gameplay(gameplay)
         self.assertIsNotNone(coupon)
         self.assertEqual(timezone.localtime(coupon.valid_from).date(),gameplay.play_date+timedelta(days=1))
         self.assertEqual(timezone.localtime(coupon.expiry_at).date(),gameplay.play_date+timedelta(days=7))
+
+    def test_future_and_expired_rewards_are_not_eligible(self):
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        self.reward.start_date=gameplay.play_date+timedelta(days=1);self.reward.end_date=None;self.reward.save()
+        self.assertIsNone(generate_coupon_for_gameplay(gameplay))
+        self.reward.start_date=None;self.reward.end_date=gameplay.play_date-timedelta(days=1);self.reward.save()
+        self.assertIsNone(generate_coupon_for_gameplay(gameplay))
+
+    def test_reward_from_another_restaurant_is_never_used(self):
+        self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
+        owner=get_user_model().objects.create_user('reward-owner@example.com',raw_password='x',full_name='Reward Owner')
+        other=Restaurant.objects.create(owner=owner,restaurant_name='Reward Cafe')
+        Reward.objects.create(restaurant=other,title='Wrong Restaurant Reward',is_active=True)
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        self.assertIsNone(generate_coupon_for_gameplay(gameplay))
+
+    def test_multiple_active_rewards_create_only_one_coupon(self):
+        newest=Reward.objects.create(restaurant=self.restaurant,title='New Reward',is_active=True)
+        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        coupon=generate_coupon_for_gameplay(gameplay)
+        self.assertEqual(coupon.reward,newest)
+        self.assertEqual(Coupon.objects.filter(gameplay=gameplay).count(),1)
 
     def test_inactive_reward_blocks_coupon_until_activated(self):
         self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
@@ -160,3 +182,13 @@ class GameplayFlowTests(TestCase):
         self.assertIn('/coupon/view/', result.json()['coupon']['view_url'])
         duplicate=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json');self.assertEqual(duplicate.status_code,409)
         refreshed=self.client.get(reverse('games:game_play',args=[gameplay.game.slug]));self.assertContains(refreshed,'That’s all for today!')
+
+    @patch('games.views.public_coupon_url', side_effect=RuntimeError('URL build failed'))
+    def test_coupon_response_error_is_not_reported_as_missing_reward(self, _mock_url):
+        gameplay=self.assign();session=self.client.session;session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk,'table_id':self.table.pk};session.save()
+        self.client.post(reverse('games:game_start',args=[gameplay.game.slug]),data='{}',content_type='application/json')
+        gameplay.refresh_from_db();payload={'outcome':'completed','evidence':self.winning_evidence(gameplay)}
+        response=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json')
+        self.assertEqual(response.status_code,200)
+        self.assertIsNotNone(response.json()['coupon'])
+        self.assertEqual(response.json()['coupon_error'],'coupon_url_unavailable')
