@@ -41,10 +41,10 @@ class RedeemManualView(LoginRequiredMixin, StaffRequiredMixin, TemplateView):
         success, obj = redeem_coupon(user=request.user, coupon_code=code, branch=branch, device=request.META.get('HTTP_USER_AGENT','')[:255], ip_address=request.META.get('REMOTE_ADDR'))
         if success:
             messages.success(request, 'Coupon redeemed successfully.')
-            return redirect('coupons:staff_result', pk=obj.pk)
+            return redirect('coupons_staff:staff_result', pk=obj.pk)
         else:
             messages.error(request, f'Redemption failed: {obj}')
-            return redirect('coupons:staff_manual')
+            return redirect('coupons_staff:staff_manual')
 
 
 class StaffResultView(LoginRequiredMixin, StaffRequiredMixin, TemplateView):

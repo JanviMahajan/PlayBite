@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from customer.models import Customer
-from restaurants.models import Restaurant
+from restaurants.models import Branch, Restaurant
 from .forms import RewardForm
 from .models import Coupon, Reward
 
@@ -124,3 +124,34 @@ class CustomerCouponTests(TestCase):
         self.client.post(url)
         self.reward.refresh_from_db()
         self.assertTrue(self.reward.is_active)
+
+    def test_manual_redemption_redirects_to_staff_result(self):
+        branch = Branch.objects.create(
+            restaurant=self.restaurant, branch_name='Main', address='x',
+            city='x', state='x', country='x',
+        )
+        now = timezone.now()
+        coupon = self.make_coupon(
+            status=Coupon.Status.ACTIVE,
+            valid_from=now - timedelta(days=1),
+            expiry_at=now + timedelta(days=1),
+        )
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('coupons_staff:staff_manual'),
+            {'code': coupon.coupon_code, 'branch': branch.pk},
+        )
+        self.assertRedirects(
+            response,
+            reverse('coupons_staff:staff_result', kwargs={'pk': coupon.redemption.pk}),
+        )
+        coupon.refresh_from_db()
+        self.assertEqual(coupon.status, Coupon.Status.REDEEMED)
+
+    def test_failed_manual_redemption_returns_to_manual_form(self):
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('coupons_staff:staff_manual'),
+            {'code': 'PB-NOTFOUND'},
+        )
+        self.assertRedirects(response, reverse('coupons_staff:staff_manual'))
