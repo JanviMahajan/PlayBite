@@ -5,7 +5,12 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from accounts.views import StaffRequiredMixin
 from .models import Coupon, Redemption
 from django.utils import timezone
-from .services.redeemer import redeem_coupon, validate_qr_token
+from .services.redeemer import (
+    coupon_code_from_payload,
+    normalize_coupon_code,
+    redeem_coupon,
+    validate_qr_token,
+)
 from restaurants.models import Branch
 from django.contrib import messages
 
@@ -92,7 +97,9 @@ class ScannerValidateAPI(View):
             payload = validate_qr_token(token)
             if not payload:
                 return JsonResponse({'ok': False, 'reason': 'invalid_token'})
-            code = payload.get('coupon_code')
+            code = coupon_code_from_payload(payload)
+        else:
+            code = normalize_coupon_code(code)
         if not code:
             return JsonResponse({'ok': False, 'reason': 'no_code'})
         try:

@@ -165,6 +165,30 @@ class CustomerCouponTests(TestCase):
         coupon.refresh_from_db()
         self.assertEqual(coupon.status, Coupon.Status.REDEEMED)
 
+    def test_manual_redemption_normalizes_code_formatting(self):
+        now = timezone.now()
+        coupon = self.make_coupon(
+            status=Coupon.Status.ACTIVE,
+            valid_from=now - timedelta(minutes=1),
+            expiry_at=now + timedelta(days=1),
+        )
+        entered = f'  {coupon.coupon_code.lower().replace("-", "–")}  '
+        success, redemption = redeem_coupon(self.owner, coupon_code=entered)
+        self.assertTrue(success)
+        self.assertEqual(redemption.coupon_id, coupon.pk)
+
+    def test_legacy_signed_token_code_key_still_redeems(self):
+        now = timezone.now()
+        coupon = self.make_coupon(
+            status=Coupon.Status.ACTIVE,
+            valid_from=now - timedelta(minutes=1),
+            expiry_at=now + timedelta(days=1),
+        )
+        legacy_token = signing.dumps({'code': coupon.coupon_code})
+        success, redemption = redeem_coupon(self.owner, qr_token=legacy_token)
+        self.assertTrue(success)
+        self.assertEqual(redemption.coupon_id, coupon.pk)
+
     def test_scanner_validation_activates_pending_coupon_in_valid_window(self):
         now = timezone.now()
         coupon = self.make_coupon(

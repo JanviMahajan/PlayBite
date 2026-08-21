@@ -5,6 +5,20 @@ from django.core import signing
 from coupons.models import Coupon, Redemption
 
 
+def normalize_coupon_code(value):
+    """Normalize harmless formatting introduced by copy/paste or manual entry."""
+    return (value or '').strip().upper().translate(str.maketrans({
+        '–': '-', '—': '-', '−': '-', '‑': '-',
+    }))
+
+
+def coupon_code_from_payload(payload):
+    """Read both current and legacy signed PlayBite coupon payloads."""
+    if not payload:
+        return ''
+    return normalize_coupon_code(payload.get('coupon_code') or payload.get('code'))
+
+
 def validate_qr_token(token):
     try:
         payload = signing.loads(token)
@@ -24,12 +38,15 @@ def redeem_coupon(user, coupon_code=None, qr_token=None, branch=None, device=Non
         payload = validate_qr_token(qr_token)
         if not payload:
             return False, 'invalid_token'
-        code = payload.get('coupon_code')
+        code = coupon_code_from_payload(payload)
+        if not code:
+            return False, 'invalid_token'
         try:
             coupon = Coupon.objects.select_for_update().get(coupon_code=code)
         except Coupon.DoesNotExist:
             return False, 'not_found'
     elif coupon_code:
+        coupon_code = normalize_coupon_code(coupon_code)
         try:
             coupon = Coupon.objects.select_for_update().get(coupon_code=coupon_code)
         except Coupon.DoesNotExist:

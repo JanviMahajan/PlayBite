@@ -7,13 +7,13 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from coupons.models import Coupon
-from coupons.services.redeemer import validate_qr_token
+from coupons.services.redeemer import coupon_code_from_payload, validate_qr_token
 
 
 def coupon_from_private_token(token):
     """Resolve one coupon only after validating its signed, stored token."""
     payload = validate_qr_token(token)
-    coupon_code = payload.get('coupon_code') if payload else None
+    coupon_code = coupon_code_from_payload(payload)
     if not coupon_code:
         raise Http404('Coupon not found.')
     try:
