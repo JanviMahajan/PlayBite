@@ -12,6 +12,7 @@ from customer.models import Customer
 from restaurants.models import Branch, Restaurant
 from .forms import RewardForm
 from .models import Coupon, Reward
+from .services.redeemer import redeem_coupon
 
 
 class RewardFormTests(SimpleTestCase):
@@ -147,6 +148,38 @@ class CustomerCouponTests(TestCase):
         )
         coupon.refresh_from_db()
         self.assertEqual(coupon.status, Coupon.Status.REDEEMED)
+
+    def test_pending_coupon_redeems_once_valid_from_has_passed(self):
+        now = timezone.now()
+        coupon = self.make_coupon(
+            status=Coupon.Status.PENDING,
+            valid_from=now - timedelta(minutes=1),
+            expiry_at=now + timedelta(days=1),
+        )
+        success, redemption = redeem_coupon(
+            self.owner,
+            coupon_code=coupon.coupon_code,
+        )
+        self.assertTrue(success)
+        self.assertEqual(redemption.coupon_id, coupon.pk)
+        coupon.refresh_from_db()
+        self.assertEqual(coupon.status, Coupon.Status.REDEEMED)
+
+    def test_scanner_validation_activates_pending_coupon_in_valid_window(self):
+        now = timezone.now()
+        coupon = self.make_coupon(
+            status=Coupon.Status.PENDING,
+            valid_from=now - timedelta(minutes=1),
+            expiry_at=now + timedelta(days=1),
+        )
+        self.client.force_login(self.owner)
+        response = self.client.post(
+            reverse('coupons_staff:scanner_validate_api'),
+            {'code': coupon.coupon_code},
+        )
+        self.assertTrue(response.json()['ok'])
+        coupon.refresh_from_db()
+        self.assertEqual(coupon.status, Coupon.Status.ACTIVE)
 
     def test_failed_manual_redemption_returns_to_manual_form(self):
         self.client.force_login(self.owner)

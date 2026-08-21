@@ -37,6 +37,11 @@ def redeem_coupon(user, coupon_code=None, qr_token=None, branch=None, device=Non
     else:
         return False, 'no_identifier'
 
+    # Coupons are created as PENDING and become active at the next calendar
+    # day's validity boundary. Synchronize the stored status while the coupon
+    # row is locked so a customer-facing "Ready to Use" coupon can redeem.
+    coupon.mark_active_if_needed()
+
     # Validate ownership and status
     # coupon.restaurant must match branch.restaurant if branch provided
     if branch and coupon.branch and coupon.branch.pk != branch.pk:

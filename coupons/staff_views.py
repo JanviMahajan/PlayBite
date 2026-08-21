@@ -99,6 +99,7 @@ class ScannerValidateAPI(View):
             coupon = Coupon.objects.get(coupon_code=code)
         except Coupon.DoesNotExist:
             return JsonResponse({'ok': False, 'reason': 'not_found'})
+        coupon.mark_active_if_needed()
         # basic checks
         if branch and coupon.branch and coupon.branch.pk != branch.pk:
             return JsonResponse({'ok': False, 'reason': 'branch_mismatch'})
