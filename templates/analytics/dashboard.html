@@ -1,94 +1,50 @@
 {% extends 'base_dashboard.html' %}
+{% load static %}
 {% block title %}Analytics | PlayBite{% endblock %}
-{% block extra_css %}
-<link rel="stylesheet" href="/static/css/analytics.css">
-<style>
-.kpi-card{border-radius:12px;padding:18px}
-.charts-row{margin-top:20px}
-</style>
-{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/analytics.css' %}">{% endblock %}
 {% block content %}
-<div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center">
-    <h3>Analytics</h3>
-    <div>
-      <label class="me-2">Range</label>
-      <input id="start" type="date" value="{{ start_date }}"> - <input id="end" type="date" value="{{ end_date }}">
-      <button id="applyRange" class="btn btn-sm btn-primary">Apply</button>
-      <a id="exportCsv" class="btn btn-sm btn-outline-secondary" href="#">Export CSV</a>
-    </div>
+<section id="analyticsDashboard"
+         data-overview-url="{% url 'analytics:api_overview' %}"
+         data-chart-url="{% url 'analytics:api_chart' '__chart__' %}"
+         data-export-url="{% url 'analytics:export' %}">
+  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
+    <div><h1 class="h3 mb-1">Analytics</h1><p class="text-muted mb-0">Restaurant performance from QR scan to coupon redemption.</p></div>
+    <a id="exportCsv" class="btn btn-outline-secondary" href="#">Export CSV</a>
   </div>
 
-  <div class="row mt-3 g-3" id="kpiRow">
-    <div class="col-sm-6 col-md-3">
-      <div class="card kpi-card">
-        <h6>Total QR Scans</h6>
-        <div id="kpi_total_qr_scans" class="h3">—</div>
-      </div>
+  <form id="analyticsFilters" class="card analytics-filter-card p-3 mb-4" novalidate>
+    <div class="row g-3 align-items-end">
+      <div class="col-6 col-lg-2"><label class="form-label" for="start">Start date</label><input class="form-control" id="start" name="start" type="date" value="{{ start_date }}" required></div>
+      <div class="col-6 col-lg-2"><label class="form-label" for="end">End date</label><input class="form-control" id="end" name="end" type="date" value="{{ end_date }}" required></div>
+      <div class="col-12 col-md-5 col-lg-3"><label class="form-label" for="branch">Branch</label><select class="form-select" id="branch" name="branch"><option value="">All branches</option>{% for branch in branches %}<option value="{{ branch.pk }}">{{ branch.branch_name }}</option>{% endfor %}</select></div>
+      <div class="col-12 col-md-5 col-lg-3"><label class="form-label" for="game">Game</label><select class="form-select" id="game" name="game"><option value="">All games</option>{% for game in games %}<option value="{{ game.pk }}">{{ game.name }}</option>{% endfor %}</select></div>
+      <div class="col-12 col-md-2"><button class="btn btn-primary w-100" type="submit">Apply</button></div>
     </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card kpi-card">
-        <h6>Unique Customers</h6>
-        <div id="kpi_unique_customers" class="h3">—</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card kpi-card">
-        <h6>Games Played</h6>
-        <div id="kpi_games_played" class="h3">—</div>
-      </div>
-    </div>
-    <div class="col-sm-6 col-md-3">
-      <div class="card kpi-card">
-        <h6>Coupons Redeemed</h6>
-        <div id="kpi_coupons_redeemed" class="h3">—</div>
-      </div>
-    </div>
+    <p id="analyticsError" class="alert alert-danger mt-3 mb-0" role="alert" hidden></p>
+  </form>
+
+  <div class="row g-3" id="kpiRow" aria-live="polite">
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Total QR Scans</h2><strong id="kpi_total_qr_scans">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Unique Customers</h2><strong id="kpi_unique_customers">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Returning Customers</h2><strong id="kpi_returning_customers">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Games Played</h2><strong id="kpi_games_played">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Win Rate</h2><strong id="kpi_game_completion_rate">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Coupons Generated</h2><strong id="kpi_coupons_generated">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Coupons Redeemed</h2><strong id="kpi_coupons_redeemed">—</strong></article></div>
+    <div class="col-6 col-xl-3"><article class="kpi-card"><h2>Redemption Rate</h2><strong id="kpi_redemption_rate">—</strong></article></div>
   </div>
 
-  <div class="row charts-row">
-    <div class="col-md-8">
-      <div class="card p-3">
-        <h6>Daily QR Scans</h6>
-        <canvas id="chart_daily_scans"></canvas>
-      </div>
-      <div class="card p-3 mt-3">
-        <h6>Daily Games Played</h6>
-        <canvas id="chart_daily_games"></canvas>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card p-3">
-        <h6>Most Popular Games</h6>
-        <canvas id="chart_popular_games"></canvas>
-      </div>
-      <div class="card p-3 mt-3">
-        <h6>Device Breakdown</h6>
-        <canvas id="chart_device_breakdown"></canvas>
-      </div>
-    </div>
+  <div class="row g-3 mt-1">
+    <div class="col-12 col-xl-6"><article class="card analytics-chart-card p-3"><h2 class="h6">Daily QR Scans</h2><canvas id="chart_daily_scans"></canvas></article></div>
+    <div class="col-12 col-xl-6"><article class="card analytics-chart-card p-3"><h2 class="h6">Daily Games Played</h2><canvas id="chart_daily_games"></canvas></article></div>
+    <div class="col-12 col-xl-6"><article class="card analytics-chart-card p-3"><h2 class="h6">Coupons Generated & Redeemed</h2><canvas id="chart_coupons"></canvas></article></div>
+    <div class="col-12 col-md-6 col-xl-3"><article class="card analytics-chart-card p-3"><h2 class="h6">Popular Games</h2><canvas id="chart_popular_games"></canvas></article></div>
+    <div class="col-12 col-md-6 col-xl-3"><article class="card analytics-chart-card p-3"><h2 class="h6">Customer Devices</h2><canvas id="chart_device_breakdown"></canvas></article></div>
+    <div class="col-12"><article class="card analytics-chart-card p-3"><h2 class="h6">QR Scan Peak Hours</h2><canvas id="chart_peak_hours"></canvas></article></div>
   </div>
-
-</div>
+</section>
 {% endblock %}
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/static/js/analytics/dashboard.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', ()=>{
-    const start = document.getElementById('start');
-    const end = document.getElementById('end');
-    const apply = document.getElementById('applyRange');
-    const exportCsv = document.getElementById('exportCsv');
-    function applyRange(){
-      const s = start.value; const e = end.value;
-      window.analyticsLoad({start: s, end: e});
-      exportCsv.href = `/dashboard/analytics/export/?start=${s}&end=${e}`;
-    }
-    apply.addEventListener('click', applyRange);
-    // initial load
-    window.analyticsLoad({start: start.value, end: end.value});
-    exportCsv.href = `/dashboard/analytics/export/?start=${start.value}&end=${end.value}`;
-  });
-</script>
+<script src="{% static 'js/analytics/dashboard.js' %}"></script>
 {% endblock %}

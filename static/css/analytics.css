@@ -23,6 +23,18 @@
   font-size: 0.85rem;
 }
 
+.kpi-card h2 {
+  margin: 0 0 0.5rem;
+  color: var(--pb-text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.kpi-card strong {
+  color: var(--pb-accent);
+  font-size: clamp(1.35rem, 4vw, 2rem);
+}
+
 .kpi-card .h3 {
   color: var(--pb-accent);
   font-size: clamp(1.35rem, 4vw, 2rem);
@@ -30,7 +42,25 @@
 
 .analytics-chart-card canvas {
   width: 100% !important;
+  min-height: 260px;
   max-height: min(45vh, 300px);
+}
+
+.analytics-filter-card {
+  border: 1px solid var(--pb-border);
+  background: var(--pb-surface);
+}
+
+.analytics-filter-card .form-label,
+.analytics-chart-card h2 {
+  color: var(--pb-text);
+}
+
+.analytics-filter-card .form-control,
+.analytics-filter-card .form-select {
+  color: var(--pb-text);
+  background-color: var(--pb-surface);
+  border-color: var(--pb-border);
 }
 
 @media (max-width: 767.98px) {

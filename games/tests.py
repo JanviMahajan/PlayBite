@@ -149,7 +149,8 @@ class GameplayFlowTests(TestCase):
 
     def test_bad_evidence_cannot_claim_a_win(self):
         gameplay=self.start(self.assign('pizza-slice'))
-        gameplay,accepted,reason=submit_gameplay(gameplay.pk,self.customer.pk,True,{'cuts':[999,999,999]})
+        invalid_cuts=[zone['center']+180 for zone in gameplay.challenge_data['zones']]
+        gameplay,accepted,reason=submit_gameplay(gameplay.pk,self.customer.pk,True,{'cuts':invalid_cuts})
         self.assertTrue(accepted);self.assertEqual(reason,'objective_incomplete');self.assertEqual(gameplay.result,Gameplay.Result.LOST)
 
     def test_duplicate_submission_is_rejected(self):
