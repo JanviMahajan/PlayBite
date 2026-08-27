@@ -15,7 +15,7 @@ from coupons.services.redeemer import redeem_coupon
 from customer.models import Customer
 from restaurants.models import Branch, Restaurant, RestaurantTable
 from .models import Game, Gameplay
-from .services.gameplay import ACTIVE_GAME_SLUGS, assign_daily_game, start_gameplay, submit_gameplay
+from .services.gameplay import ACTIVE_GAME_SLUGS, assign_daily_game, start_gameplay, submit_gameplay, validate_objective
 
 
 class GameplayFlowTests(TestCase):
@@ -44,7 +44,7 @@ class GameplayFlowTests(TestCase):
     def winning_evidence(gameplay):
         c=gameplay.challenge_data
         if gameplay.game.slug == 'burger-stack': return {'placements':[.8]*len(c['ingredients']),'mistakes':0}
-        if gameplay.game.slug == 'order-rush': return {'selection':c['order']}
+        if gameplay.game.slug == 'order-rush': return {'selection':c['order'],'attempts':c['order']}
         if gameplay.game.slug == 'memory-match':
             grouped={}
             for i,item in enumerate(c['deck']): grouped.setdefault(item,[]).append(i)
@@ -156,6 +156,27 @@ class GameplayFlowTests(TestCase):
         invalid_cuts=[zone['center']+180 for zone in gameplay.challenge_data['zones']]
         gameplay,accepted,reason=submit_gameplay(gameplay.pk,self.customer.pk,True,{'cuts':invalid_cuts})
         self.assertTrue(accepted);self.assertEqual(reason,'objective_incomplete');self.assertEqual(gameplay.result,Gameplay.Result.LOST)
+
+    def test_burger_uses_the_harder_server_overlap_threshold(self):
+        gameplay=self.start(self.assign('burger-stack'))
+        self.assertEqual(gameplay.challenge_data['min_overlap'],.68)
+        self.assertFalse(validate_objective(gameplay,{'placements':[.8]*len(gameplay.challenge_data['ingredients']),'mistakes':1}))
+        evidence={'placements':[.67]*len(gameplay.challenge_data['ingredients']),'mistakes':0}
+        gameplay,accepted,reason=submit_gameplay(gameplay.pk,self.customer.pk,True,evidence)
+        self.assertTrue(accepted);self.assertEqual(reason,'objective_incomplete');self.assertEqual(gameplay.result,Gameplay.Result.LOST)
+
+    def test_order_rush_rejects_a_third_incorrect_tap(self):
+        gameplay=self.start(self.assign('order-rush'))
+        order=gameplay.challenge_data['order']
+        wrong=next(item for item in ['☕','🍔','🍕','🍟','🥤','🧁','🍩','🥪'] if item != order[0])
+        evidence={'selection':order,'attempts':[wrong,wrong,wrong,*order]}
+        self.assertFalse(validate_objective(gameplay,evidence))
+
+    def test_pizza_uses_narrower_zones_and_increasing_speed(self):
+        gameplay=self.start(self.assign('pizza-slice'))
+        self.assertTrue(all(zone['width']==68 for zone in gameplay.challenge_data['zones']))
+        self.assertEqual(gameplay.challenge_data['base_speed'],135)
+        self.assertEqual(gameplay.challenge_data['speed_step'],30)
 
     def test_duplicate_submission_is_rejected(self):
         gameplay=self.start(self.assign());evidence=self.winning_evidence(gameplay)

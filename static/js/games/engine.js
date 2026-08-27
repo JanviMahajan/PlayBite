@@ -52,7 +52,7 @@ export default class GameEngine {
   toggleMute(button) { this.muted=!this.muted; button.textContent=this.muted?'🔇':'🔊';button.setAttribute('aria-pressed',String(this.muted));button.setAttribute('aria-label',this.muted?'Unmute game sounds':'Mute game sounds'); }
   complete(evidence) { this.finish('completed', evidence); }
   async finish(outcome, evidence) {
-    if (this.ending) return; this.ending=true;this.running=false;cancelAnimationFrame(this.frame);this.game?.destroy?.();
+    if (this.ending) return; this.ending=true;this.outcome=outcome;this.running=false;cancelAnimationFrame(this.frame);this.game?.destroy?.();
     try { const result=await this.request(this.submitUrl,{outcome,evidence}); this.showResult(result); }
     catch (error) {
       if (error.status === 409 || error.status >= 500) { window.location.reload(); return; }
@@ -61,6 +61,15 @@ export default class GameEngine {
   }
   showResult(result) {
     if (!result.won) {
+      if (this.slug === 'order-rush' && this.outcome === 'mistakes') {
+        this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero fail">🧾</div><h1>Oops! Too many incorrect taps!</h1><p>Today’s order challenge is over. Come back tomorrow and try again! ✨</p><a class="pb-primary-button" href="/">See You Tomorrow</a></div>'; return;
+      }
+      if (this.slug === 'burger-stack' && this.outcome === 'missed') {
+        this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero fail">🍔</div><h1>Oops! It missed the tray!</h1><p>That ingredient fell to the ground. Come back tomorrow for another try! ✨</p><a class="pb-primary-button" href="/">See You Tomorrow</a></div>'; return;
+      }
+      if (this.slug === 'pizza-slice' && this.outcome === 'missed') {
+        this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero fail">🍕</div><h1>Oops! Missed the green zone!</h1><p>That cut was outside the target. Come back tomorrow for another try! ✨</p><a class="pb-primary-button" href="/">See You Tomorrow</a></div>'; return;
+      }
       this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero fail">🥹</div><h1>${this.strings.timeUp}</h1><p>${this.strings.soClose}</p><a class="pb-primary-button" href="/">${this.strings.tomorrow}</a></div>`; return;
     }
     this.sound('success'); this.confetti(); const coupon=result.coupon;

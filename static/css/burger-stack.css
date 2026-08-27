@@ -1,0 +1,17 @@
+.ingredient.bottom {
+  width: 112px;
+  box-shadow: 0 7px 0 rgb(117 72 37 / 18%);
+}
+
+.moving-food.fell-to-ground {
+  top: 86%;
+  opacity: .45;
+  transform: translateX(-50%) rotate(18deg) scale(.82);
+  transition: top .25s ease-in, transform .25s ease-in, opacity .25s ease-in;
+}
+
+@media (max-width: 360px) {
+  .ingredient.bottom {
+    width: 104px;
+  }
+}

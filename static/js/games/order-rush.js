@@ -13,7 +13,10 @@ export default class OrderRush {
   constructor(engine, challenge) {
     this.e = engine;
     this.c = challenge;
+    this.maxWrong = Number.isInteger(challenge.max_wrong) ? challenge.max_wrong : 2;
     this.selected = [];
+    this.attempts = [];
+    this.wrong = 0;
     this.ready = false;
     this.buttons = [];
     this.revealTimer = null;
@@ -29,6 +32,7 @@ export default class OrderRush {
         <div class="order-slots">
           ${this.c.order.map(() => '<span>?</span>').join('')}
         </div>
+        <div class="order-mistakes" role="status">Incorrect taps: <b>0 / ${this.maxWrong}</b></div>
         <div class="food-grid">
           ${OPTIONS.map(([food, name]) => `
             <button type="button" data-food="${food}" aria-label="${name}" aria-pressed="false">
@@ -61,13 +65,22 @@ export default class OrderRush {
     if (!this.ready || this.e.ending || button.disabled) return;
 
     const wanted = this.c.order[this.selected.length];
+    this.attempts.push(food);
     if (food !== wanted) {
+      this.wrong += 1;
+      this.e.stage.querySelector('.order-mistakes b').textContent = `${this.wrong} / ${this.maxWrong}`;
       button.classList.remove('shake');
       void button.offsetWidth;
       button.classList.add('shake');
       window.setTimeout(() => button.classList.remove('shake'), 350);
       this.e.sound('miss');
-      this.e.status('Not that one — try another item! ✨', 'miss');
+      if (this.wrong > this.maxWrong) {
+        this.ready = false;
+        this.e.status('Too many incorrect taps!','miss');
+        this.e.finish('mistakes',{selection:this.selected,attempts:this.attempts});
+        return;
+      }
+      this.e.status(`${this.maxWrong-this.wrong} incorrect tap${this.maxWrong-this.wrong===1?'':'s'} left ✨`, 'miss');
       return;
     }
 
@@ -80,7 +93,7 @@ export default class OrderRush {
     if (this.selected.length === this.c.order.length) {
       this.ready = false;
       this.e.status(this.e.strings.orderServed, 'success');
-      window.setTimeout(() => this.e.complete({ selection: this.selected }), 250);
+      window.setTimeout(() => this.e.complete({ selection: this.selected, attempts: this.attempts }), 250);
     }
   }
 

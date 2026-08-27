@@ -1,0 +1,20 @@
+.order-mistakes {
+  width: fit-content;
+  margin: -6px auto 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fff0df;
+  color: #704735;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.order-mistakes b {
+  color: #c9512b;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-bs-theme=dark] .order-mistakes {
+  background: #3c2d27;
+  color: #f5e5db;
+}

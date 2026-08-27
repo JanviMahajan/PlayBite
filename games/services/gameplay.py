@@ -13,10 +13,10 @@ ACTIVE_GAME_SLUGS = ('burger-stack', 'order-rush', 'memory-match', 'pizza-slice'
 FOOD_ITEMS = ['☕', '🍔', '🍕', '🍟', '🥤', '🧁', '🍩', '🥪']
 MEMORY_ITEMS = ['☕', '🍕', '🍔', '🍩', '🧁', '🍓']
 GAME_UI = {
-    'burger-stack': {'icon': '🍔', 'title': _('Build That Burger!'), 'description': _('Drop the ingredients at the right moment and build the perfect burger before time runs out!'), 'steps': [_('Watch the ingredient move.'), _('Tap anywhere to drop it.'), _('Stack all the ingredients.'), _('Finish before the timer reaches the flag!')], 'cta': _("Let's Stack! 🍔")},
-    'order-rush': {'icon': '🧾', 'title': _('Remember the Order!'), 'description': _('A hungry customer is waiting! Memorize their order and recreate it before time runs out.'), 'steps': [_('Memorize the order.'), _('The order will disappear.'), _('Tap the items in the same order.'), _('Complete it before the flag!')], 'cta': _("I'm Ready! 👀")},
+    'burger-stack': {'icon': '🍔', 'title': _('Build That Burger!'), 'description': _('Drop the ingredients at the right moment and build the perfect burger before time runs out!'), 'steps': [_('Watch the ingredient move.'), _('Tap when it is above the burger tray.'), _('A fall outside the tray ends the game.'), _('Stack every ingredient before time runs out!')], 'cta': _("Let's Stack! 🍔")},
+    'order-rush': {'icon': '🧾', 'title': _('Remember the Order!'), 'description': _('A hungry customer is waiting! Memorize their order and recreate it before time runs out.'), 'steps': [_('Memorize the order.'), _('Tap the items in the same order.'), _('Two incorrect taps are allowed.'), _('A third incorrect tap ends the game!')], 'cta': _("I'm Ready! 👀")},
     'memory-match': {'icon': '🧠', 'title': _('Match the Treats!'), 'description': _('Find all the matching food pairs before time runs out!'), 'steps': [_('Tap a card to reveal it.'), _('Find its matching pair.'), _('Match every pair.'), _('Beat the timer!')], 'cta': _('Start Matching! ✨')},
-    'pizza-slice': {'icon': '🍕', 'title': _('Perfect Slice!'), 'description': _('Time your taps and slice the pizza at just the right moment!'), 'steps': [_('Watch the moving cutter.'), _('Wait for the highlighted zone.'), _('Tap to make the cut.'), _('Complete three cuts in time!')], 'cta': _('Slice It! 🍕')},
+    'pizza-slice': {'icon': '🍕', 'title': _('Perfect Slice!'), 'description': _('Time your taps and slice the pizza at just the right moment!'), 'steps': [_('Watch the moving cutter.'), _('Wait until it enters the green zone.'), _('Tap only inside the green zone—a miss ends the game.'), _('Complete three perfect cuts in time!')], 'cta': _('Slice It! 🍕')},
     'tap-at-ten': {'icon': '☕', 'title': _('Tap at 10 Seconds!'), 'description': _('Trust your inner clock and stop as close to 10 seconds as you can to win a free coffee!'), 'steps': [_('Press start and watch 1, 2, 3, GO!'), _('Wait for the STOP button to appear.'), _('Start counting only when you see STOP.'), _('Press STOP when your count reaches 10!')], 'cta': _('Start! ☕')},
 }
 
@@ -69,15 +69,24 @@ def assign_daily_game(customer, restaurant, table, request):
 def build_challenge(slug):
     rng = random.SystemRandom()
     if slug == 'burger-stack':
-        return {'ingredients': ['lettuce', 'cheese', 'patty', 'tomato', 'top-bun'], 'max_mistakes': 2}
+        return {
+            'ingredients': ['lettuce', 'cheese', 'patty', 'tomato', 'top-bun'],
+            'max_mistakes': 0,
+            'min_overlap': 0.68,
+            'speed': 55,
+        }
     if slug == 'order-rush':
-        return {'order': rng.sample(FOOD_ITEMS, 4)}
+        return {'order': rng.sample(FOOD_ITEMS, 4), 'max_wrong': 2}
     if slug == 'memory-match':
         deck = MEMORY_ITEMS * 2
         rng.shuffle(deck)
         return {'deck': deck, 'pairs': len(MEMORY_ITEMS)}
     if slug == 'pizza-slice':
-        return {'zones': [{'center': rng.randrange(0, 360), 'width': 72} for _ in range(3)]}
+        return {
+            'zones': [{'center': rng.randrange(0, 360), 'width': 68} for _ in range(3)],
+            'base_speed': 135,
+            'speed_step': 30,
+        }
     if slug == 'tap-at-ten':
         return {'target_ms': 10000, 'tolerance_ms': 500}
     raise ValueError('Unsupported game.')
@@ -112,11 +121,29 @@ def validate_objective(gameplay, evidence, server_elapsed_ms=None):
         slug = gameplay.game.slug
         if slug == 'burger-stack':
             placements = evidence.get('placements', [])
-            return len(placements) == len(challenge.get('ingredients', [])) and all(
-                0.45 <= float(overlap) <= 1 for overlap in placements
+            min_overlap = float(challenge.get('min_overlap', 0.68))
+            return int(evidence.get('mistakes', 0)) == 0 and len(placements) == len(challenge.get('ingredients', [])) and all(
+                min_overlap <= float(overlap) <= 1 for overlap in placements
             )
         if slug == 'order-rush':
-            return evidence.get('selection') == challenge.get('order')
+            order = challenge.get('order', [])
+            if evidence.get('selection') != order:
+                return False
+            if 'max_wrong' not in challenge:
+                return True
+            attempts = evidence.get('attempts', [])
+            if not isinstance(attempts, list):
+                return False
+            progress = 0
+            wrong = 0
+            for item in attempts:
+                if progress < len(order) and item == order[progress]:
+                    progress += 1
+                else:
+                    wrong += 1
+                if wrong > int(challenge['max_wrong']):
+                    return False
+            return progress == len(order)
         if slug == 'memory-match':
             deck = challenge.get('deck', [])
             pairs = evidence.get('pairs', [])
