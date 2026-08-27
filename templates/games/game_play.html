@@ -1,7 +1,7 @@
 {% extends 'base_clean.html' %}
 {% load static i18n %}
 {% block title %}{{ game_ui.title }} · PlayBite{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/games.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/games.css' %}"><link rel="stylesheet" href="{% static 'css/tap-at-ten.css' %}">{% endblock %}
 {% block content %}
 <main class="pb-game-shell">
   <header class="pb-game-header">
@@ -37,6 +37,7 @@
     'order-rush': "{% static 'js/games/order-rush.js' %}",
     'memory-match': "{% static 'js/games/memory-match.js' %}",
     'pizza-slice': "{% static 'js/games/pizza-slice.js' %}",
+    'tap-at-ten': "{% static 'js/games/tap-at-ten.js' %}",
   };
   const module = await import(gameModules[slug]);
   const engine = new GameEngine({

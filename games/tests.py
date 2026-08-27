@@ -49,16 +49,19 @@ class GameplayFlowTests(TestCase):
             grouped={}
             for i,item in enumerate(c['deck']): grouped.setdefault(item,[]).append(i)
             return {'pairs':list(grouped.values())}
-        return {'cuts':[z['center'] for z in c['zones']]}
+        if gameplay.game.slug == 'pizza-slice': return {'cuts':[z['center'] for z in c['zones']]}
+        return {'tap_ms':c['target_ms']}
 
     def start(self, gameplay):
         gameplay, started=start_gameplay(gameplay.pk,self.customer.pk);self.assertTrue(started);return gameplay
 
-    def test_each_of_four_objectives_can_win_without_score(self):
+    def test_each_objective_can_win_without_score(self):
         for index, slug in enumerate(ACTIVE_GAME_SLUGS):
             customer=Customer.objects.create(full_name=slug,phone_number=f'+919900000{index}')
             self.customer=customer
             gameplay=self.start(self.assign(slug))
+            if slug == 'tap-at-ten':
+                now=timezone.now();Gameplay.objects.filter(pk=gameplay.pk).update(started_at=now-timedelta(seconds=10),deadline=now+timedelta(seconds=5));gameplay.refresh_from_db()
             gameplay,accepted,reason=submit_gameplay(gameplay.pk,customer.pk,True,self.winning_evidence(gameplay))
             self.assertTrue(accepted);self.assertIsNone(reason);self.assertEqual(gameplay.result,Gameplay.Result.WON);self.assertEqual(gameplay.score,0)
 
@@ -95,11 +98,12 @@ class GameplayFlowTests(TestCase):
         self.assertIsNone(generate_coupon_for_gameplay(gameplay))
 
     def test_reward_from_another_restaurant_is_never_used(self):
+        gameplay=self.start(self.assign())
         self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
         owner=get_user_model().objects.create_user('reward-owner@example.com',raw_password='x',full_name='Reward Owner')
         other=Restaurant.objects.create(owner=owner,restaurant_name='Reward Cafe')
         Reward.objects.create(restaurant=other,title='Wrong Restaurant Reward',is_active=True)
-        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         self.assertIsNone(generate_coupon_for_gameplay(gameplay))
 
     def test_multiple_active_rewards_create_only_one_coupon(self):
@@ -120,8 +124,8 @@ class GameplayFlowTests(TestCase):
         self.assertNotIn('LEFT OUTER JOIN "restaurants_restauranttable"', gameplay_select)
 
     def test_inactive_reward_blocks_coupon_until_activated(self):
-        self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
-        gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
+        gameplay=self.start(self.assign());self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
+        gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         self.assertIsNone(generate_coupon_for_gameplay(gameplay))
         self.reward.is_active=True;self.reward.save(update_fields=['is_active'])
         self.assertIsNotNone(generate_coupon_for_gameplay(gameplay))
@@ -174,7 +178,35 @@ class GameplayFlowTests(TestCase):
         other=Restaurant.objects.create(owner=owner,restaurant_name='Other Cafe')
         branch=Branch.objects.create(restaurant=other,branch_name='Main',address='x',city='x',state='x',country='x')
         with patch.object(RestaurantTable,'generate_qr_image'): table=RestaurantTable.objects.create(branch=branch,table_number='1')
+        Reward.objects.create(restaurant=other,title='Other Treat',is_active=True)
         self.assign();_,created=assign_daily_game(self.customer,other,table,self.request);self.assertTrue(created)
+
+    def test_tap_at_ten_rejects_browser_timing_without_matching_server_time(self):
+        gameplay=self.start(self.assign('tap-at-ten'))
+        gameplay,accepted,reason=submit_gameplay(
+            gameplay.pk,self.customer.pk,True,{'tap_ms':10000},
+        )
+        self.assertTrue(accepted);self.assertEqual(reason,'objective_incomplete');self.assertEqual(gameplay.result,Gameplay.Result.LOST)
+
+    def test_tap_at_ten_awards_game_specific_free_coffee(self):
+        gameplay=self.start(self.assign('tap-at-ten'))
+        now=timezone.now();Gameplay.objects.filter(pk=gameplay.pk).update(started_at=now-timedelta(seconds=10),deadline=now+timedelta(seconds=5));gameplay.refresh_from_db()
+        gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,{'tap_ms':10000})
+        coupon=generate_coupon_for_gameplay(gameplay)
+        self.assertEqual(coupon.reward.title,'Free Coffee')
+        self.assertTrue(coupon.reward.eligible_games.filter(slug='tap-at-ten').exists())
+
+    def test_random_assignment_excludes_games_without_an_eligible_reward(self):
+        self.restaurant.rewards.update(is_active=False)
+        order_game=Game.objects.get(slug='order-rush')
+        reward=Reward.objects.create(
+            restaurant=self.restaurant,title='Order Treat',is_active=True,
+            game_eligibility=Reward.GameEligibility.SPECIFIC,
+        )
+        reward.eligible_games.add(order_game)
+        Game.objects.filter(slug__in=ACTIVE_GAME_SLUGS).update(is_active=True)
+        gameplay,created=assign_daily_game(self.customer,self.restaurant,self.table,self.request)
+        self.assertTrue(created);self.assertEqual(gameplay.game.slug,'order-rush')
 
     def test_customer_is_eligible_on_next_date(self):
         old=self.assign();old.play_date=timezone.localdate()-timedelta(days=1);old.save(update_fields=['play_date'])

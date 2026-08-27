@@ -36,10 +36,14 @@ def eligible_rewards_for_restaurant(restaurant, at_date=None):
 
 
 def eligible_rewards_for_gameplay(gameplay, at_date=None):
-    return eligible_rewards_for_restaurant(
+    rewards = eligible_rewards_for_restaurant(
         gameplay.restaurant_id,
         at_date=at_date or gameplay.play_date,
     )
+    return rewards.filter(
+        Q(game_eligibility=Reward.GameEligibility.ALL)
+        | Q(game_eligibility=Reward.GameEligibility.SPECIFIC, eligible_games=gameplay.game)
+    ).distinct()
 
 
 @transaction.atomic
@@ -75,7 +79,14 @@ def generate_coupon_for_gameplay(gameplay):
         return None
 
     rewards = eligible_rewards_for_gameplay(gameplay)
-    best = rewards.order_by('-created_at', '-pk').first()
+    best = rewards.filter(
+        game_eligibility=Reward.GameEligibility.SPECIFIC,
+        eligible_games=gameplay.game,
+    ).order_by('-created_at', '-pk').first()
+    if best is None:
+        best = rewards.filter(
+            game_eligibility=Reward.GameEligibility.ALL,
+        ).order_by('-created_at', '-pk').first()
     if best is None:
         logger.warning(
             'No eligible reward for gameplay %s restaurant %s; active=%s eligible=%s play_date=%s',

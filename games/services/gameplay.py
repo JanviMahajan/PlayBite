@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from games.models import Game, Gameplay
 
 
-ACTIVE_GAME_SLUGS = ('burger-stack', 'order-rush', 'memory-match', 'pizza-slice')
+ACTIVE_GAME_SLUGS = ('burger-stack', 'order-rush', 'memory-match', 'pizza-slice', 'tap-at-ten')
 FOOD_ITEMS = ['☕', '🍔', '🍕', '🍟', '🥤', '🧁', '🍩', '🥪']
 MEMORY_ITEMS = ['☕', '🍕', '🍔', '🍩', '🧁', '🍓']
 GAME_UI = {
@@ -17,6 +17,7 @@ GAME_UI = {
     'order-rush': {'icon': '🧾', 'title': _('Remember the Order!'), 'description': _('A hungry customer is waiting! Memorize their order and recreate it before time runs out.'), 'steps': [_('Memorize the order.'), _('The order will disappear.'), _('Tap the items in the same order.'), _('Complete it before the flag!')], 'cta': _("I'm Ready! 👀")},
     'memory-match': {'icon': '🧠', 'title': _('Match the Treats!'), 'description': _('Find all the matching food pairs before time runs out!'), 'steps': [_('Tap a card to reveal it.'), _('Find its matching pair.'), _('Match every pair.'), _('Beat the timer!')], 'cta': _('Start Matching! ✨')},
     'pizza-slice': {'icon': '🍕', 'title': _('Perfect Slice!'), 'description': _('Time your taps and slice the pizza at just the right moment!'), 'steps': [_('Watch the moving cutter.'), _('Wait for the highlighted zone.'), _('Tap to make the cut.'), _('Complete three cuts in time!')], 'cta': _('Slice It! 🍕')},
+    'tap-at-ten': {'icon': '☕', 'title': _('Tap at 10 Seconds!'), 'description': _('Trust your inner clock and stop as close to 10 seconds as you can to win a free coffee!'), 'steps': [_('Press start and watch 1, 2, 3, GO!'), _('Wait for the STOP button to appear.'), _('Start counting only when you see STOP.'), _('Press STOP when your count reaches 10!')], 'cta': _('Start! ☕')},
 }
 
 
@@ -39,7 +40,14 @@ def assign_daily_game(customer, restaurant, table, request):
     existing = gameplay_today(customer, restaurant)
     if existing:
         return existing, False
-    games = list(Game.objects.filter(slug__in=ACTIVE_GAME_SLUGS, is_active=True))
+    from coupons.services.generator import eligible_rewards_for_restaurant
+    from coupons.models import Reward
+
+    rewards = eligible_rewards_for_restaurant(restaurant)
+    games_qs = Game.objects.filter(slug__in=ACTIVE_GAME_SLUGS, is_active=True)
+    if not rewards.filter(game_eligibility=Reward.GameEligibility.ALL).exists():
+        games_qs = games_qs.filter(eligible_rewards__in=rewards).distinct()
+    games = list(games_qs)
     if not games:
         raise Game.DoesNotExist('No PlayBite games are active.')
     game = random.SystemRandom().choice(games)
@@ -70,6 +78,8 @@ def build_challenge(slug):
         return {'deck': deck, 'pairs': len(MEMORY_ITEMS)}
     if slug == 'pizza-slice':
         return {'zones': [{'center': rng.randrange(0, 360), 'width': 72} for _ in range(3)]}
+    if slug == 'tap-at-ten':
+        return {'target_ms': 10000, 'tolerance_ms': 500}
     raise ValueError('Unsupported game.')
 
 
@@ -93,7 +103,7 @@ def _angle_distance(a, b):
     return abs((float(a) - float(b) + 180) % 360 - 180)
 
 
-def validate_objective(gameplay, evidence):
+def validate_objective(gameplay, evidence, server_elapsed_ms=None):
     try:
         evidence = evidence or {}
         if not isinstance(evidence, dict):
@@ -129,6 +139,15 @@ def validate_objective(gameplay, evidence):
             return len(cuts) == len(zones) and all(
                 _angle_distance(cut, zone['center']) <= zone['width'] / 2 for cut, zone in zip(cuts, zones)
             )
+        if slug == 'tap-at-ten':
+            tap_ms = int(evidence.get('tap_ms'))
+            target = int(challenge.get('target_ms', 10000))
+            tolerance = int(challenge.get('tolerance_ms', 500))
+            browser_valid = abs(tap_ms - target) <= tolerance
+            # Allow normal request latency while independently requiring the
+            # server clock to be near the same objective window.
+            server_valid = server_elapsed_ms is not None and target - 900 <= server_elapsed_ms <= target + 2200
+            return browser_valid and server_valid
     except (TypeError, ValueError, OverflowError):
         return False
     return False
@@ -143,7 +162,14 @@ def submit_gameplay(gameplay_id, customer_id, claimed_complete, evidence):
         return gameplay, False, 'already_submitted'
     now = timezone.now()
     within_deadline = bool(gameplay.started_at and gameplay.deadline and now <= gameplay.deadline)
-    won = bool(claimed_complete and within_deadline and validate_objective(gameplay, evidence))
+    server_elapsed_ms = (
+        int((now - gameplay.started_at).total_seconds() * 1000)
+        if gameplay.started_at else None
+    )
+    won = bool(
+        claimed_complete and within_deadline
+        and validate_objective(gameplay, evidence, server_elapsed_ms=server_elapsed_ms)
+    )
     gameplay.result = Gameplay.Result.WON if won else Gameplay.Result.LOST
     gameplay.completed = won
     gameplay.score = 0

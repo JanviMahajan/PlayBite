@@ -28,7 +28,7 @@ class CustomerEntryTests(TestCase):
         self.assertEqual(response.status_code, 302)
         customer = Customer.objects.get(phone_number='+919876543210')
         gameplay = Gameplay.objects.get(customer=customer)
-        self.assertIn(gameplay.game.slug, {'burger-stack','order-rush','memory-match','pizza-slice'})
+        self.assertIn(gameplay.game.slug, {'burger-stack','order-rush','memory-match','pizza-slice','tap-at-ten'})
         self.assertEqual(self.client.session['play_session']['gameplay_id'], gameplay.pk)
 
     def test_invalid_phone_is_rejected(self):
@@ -92,5 +92,15 @@ class DashboardStatsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['stats']['total_tables'], 1)
         self.assertEqual(response.context['stats']['active_branches'], 1)
-        self.assertEqual(response.context['stats']['total_rewards'], 2)
+        self.assertEqual(response.context['stats']['total_rewards'], 3)
         self.assertContains(response, reverse('coupons:reward_list'))
+
+    def test_new_restaurant_gets_default_tap_at_ten_coffee_reward(self):
+        owner = get_user_model().objects.create_user('coffee@example.com', raw_password='x')
+        restaurant = Restaurant.objects.create(owner=owner, restaurant_name='Coffee Cafe')
+        reward = restaurant.rewards.get(
+            title='Free Coffee', game_eligibility=Reward.GameEligibility.SPECIFIC,
+        )
+        self.assertEqual(reward.reward_type, Reward.RewardType.FREE_BEVERAGE)
+        self.assertTrue(reward.is_active)
+        self.assertEqual(list(reward.eligible_games.values_list('slug', flat=True)), ['tap-at-ten'])

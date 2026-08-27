@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from customer.models import Customer
+from games.models import Game
 from restaurants.models import Branch, Restaurant
 from .forms import RewardForm
 from .models import Coupon, Reward
@@ -22,7 +23,7 @@ class RewardFormTests(SimpleTestCase):
         self.assertIn('start_date', fields)
         self.assertIn('end_date', fields)
         self.assertNotIn('game_eligibility', fields)
-        self.assertNotIn('eligible_games', fields)
+        self.assertIn('eligible_games', fields)
         self.assertNotIn('max_daily_redemptions', fields)
         self.assertNotIn('max_total_redemptions', fields)
         self.assertIn('is_active', fields)
@@ -125,6 +126,30 @@ class CustomerCouponTests(TestCase):
         self.client.post(url)
         self.reward.refresh_from_db()
         self.assertTrue(self.reward.is_active)
+
+    def test_owner_can_limit_reward_to_selected_games(self):
+        game = Game.objects.get(slug='memory-match')
+        form = RewardForm(data={
+            'title': 'Memory Treat', 'description': 'Win memory match',
+            'reward_type': Reward.RewardType.FREE_ITEM, 'coupon_valid_days': 7,
+            'eligible_games': [game.pk], 'is_active': True,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        reward = form.save(commit=False)
+        reward.restaurant = self.restaurant
+        reward.save();form.save_m2m()
+        self.assertEqual(reward.game_eligibility, Reward.GameEligibility.SPECIFIC)
+        self.assertEqual(list(reward.eligible_games.values_list('pk', flat=True)), [game.pk])
+
+    def test_no_selected_games_means_reward_applies_to_all(self):
+        form = RewardForm(data={
+            'title': 'Any Game Treat', 'description': '',
+            'reward_type': Reward.RewardType.FREE_ITEM, 'coupon_valid_days': 7,
+            'is_active': True,
+        })
+        self.assertTrue(form.is_valid(), form.errors)
+        reward = form.save(commit=False)
+        self.assertEqual(reward.game_eligibility, Reward.GameEligibility.ALL)
 
     def test_manual_redemption_redirects_to_staff_result(self):
         branch = Branch.objects.create(

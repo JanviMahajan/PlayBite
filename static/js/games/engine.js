@@ -26,10 +26,12 @@ export default class GameEngine {
   async countdown() {
     this.root.innerHTML = '<div class="pb-countdown" aria-label="Game countdown"><strong></strong></div>';
     const node = this.root.querySelector('strong');
-    for (const value of ['3','2','1','GO! 🎮']) { node.textContent=value; node.classList.remove('pop'); void node.offsetWidth; node.classList.add('pop'); await new Promise(r=>setTimeout(r,value[0]==='G'?600:520)); }
+    const values = this.slug === 'tap-at-ten' ? ['1','2','3','GO! ☕'] : ['3','2','1','GO! 🎮'];
+    for (const value of values) { node.textContent=value; node.classList.remove('pop'); void node.offsetWidth; node.classList.add('pop'); await new Promise(r=>setTimeout(r,value[0]==='G'?600:520)); }
   }
   mount() {
-    this.root.innerHTML = `<div class="pb-play-head"><div><span class="pb-eyebrow">${this.strings.todayChallenge}</span><h1>${this.ui.title}</h1></div><small id="seconds-left">${this.duration}s</small></div><div class="pb-time-track" role="timer" aria-label="Time remaining"><span class="pb-time-start">●</span><div class="pb-time-fill"></div><span class="pb-runner">${this.ui.icon}</span><span class="pb-flag">🏁</span></div><div id="game-stage" class="pb-stage"></div><p id="game-status" class="pb-game-status" role="status"></p>`;
+    const timer = this.slug === 'tap-at-ten' ? '' : `<div class="pb-play-head"><div><span class="pb-eyebrow">${this.strings.todayChallenge}</span><h1>${this.ui.title}</h1></div><small id="seconds-left">${this.duration}s</small></div><div class="pb-time-track" role="timer" aria-label="Time remaining"><span class="pb-time-start">●</span><div class="pb-time-fill"></div><span class="pb-runner">${this.ui.icon}</span><span class="pb-flag">🏁</span></div>`;
+    this.root.innerHTML = `${timer}<div id="game-stage" class="pb-stage"></div><p id="game-status" class="pb-game-status" role="status"></p>`;
     this.stage = this.root.querySelector('#game-stage');
     this.game = new this.GameClass(this, this.challenge); this.game.init();
     this.started = performance.now(); this.running = true; this.frame = requestAnimationFrame(t=>this.tick(t));
@@ -39,7 +41,8 @@ export default class GameEngine {
     const elapsed=(now-this.started)/1000, remaining=Math.max(0,this.duration-elapsed), progress=Math.min(1,elapsed/this.duration);
     this.root.style.setProperty('--time-progress', `${progress*100}%`);
     this.root.classList.toggle('is-urgent', progress >= .8);
-    this.root.querySelector('#seconds-left').textContent=`${Math.ceil(remaining)}s`;
+    const seconds = this.root.querySelector('#seconds-left');
+    if (seconds) seconds.textContent=`${Math.ceil(remaining)}s`;
     this.game?.update?.(now, remaining);
     if (remaining <= 0) { this.finish('timeout', {}); return; }
     this.frame=requestAnimationFrame(t=>this.tick(t));
