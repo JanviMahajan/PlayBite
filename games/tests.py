@@ -212,7 +212,7 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(coupon.reward,self.reward)
         self.assertEqual(Coupon.objects.filter(gameplay=gameplay).count(),1)
 
-    def test_coupon_lock_query_does_not_outer_join_nullable_table(self):
+    def test_coupon_lock_query_does_not_outer_join_nullable_relations(self):
         gameplay=self.start(self.assign());gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         with CaptureQueriesContext(connection) as queries:
             generate_coupon_for_gameplay(gameplay)
@@ -221,6 +221,7 @@ class GameplayFlowTests(TestCase):
             if 'FROM "games_gameplay"' in query['sql']
         )
         self.assertNotIn('LEFT OUTER JOIN "restaurants_restauranttable"', gameplay_select)
+        self.assertNotIn('LEFT OUTER JOIN "coupons_reward"', gameplay_select)
 
     def test_inactive_reward_blocks_coupon_until_activated(self):
         gameplay=self.start(self.assign());self.reward.is_active=False;self.reward.save(update_fields=['is_active'])
@@ -456,3 +457,33 @@ class GameplayFlowTests(TestCase):
         self.assertTrue(response.json()['won'])
         self.assertIsNone(response.json()['coupon'])
         self.assertEqual(response.json()['coupon_error'],'coupon_generation_failed')
+
+    def test_committed_coupon_is_returned_if_generator_raises_after_creation(self):
+        gameplay=self.assign()
+        session=self.client.session
+        session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk,'table_id':self.table.pk}
+        session.save()
+        self.client.post(
+            reverse('games:game_start',args=[gameplay.game.slug]),data='{}',content_type='application/json',
+        )
+        gameplay.refresh_from_db()
+
+        def create_then_raise(current_gameplay):
+            generate_coupon_for_gameplay(current_gameplay)
+            raise RuntimeError('post-creation operation failed')
+
+        with patch('games.views.generate_coupon_for_gameplay', side_effect=create_then_raise):
+            response=self.client.post(
+                reverse('games:game_submit',args=[gameplay.game.slug]),
+                data=json.dumps({'outcome':'completed','evidence':self.winning_evidence(gameplay)}),
+                content_type='application/json',
+            )
+        self.assertEqual(response.status_code,200)
+        self.assertTrue(response.json()['won'])
+        self.assertIsNotNone(response.json()['coupon'])
+        coupon=Coupon.objects.get(gameplay=gameplay)
+        self.assertEqual(response.json()['coupon']['code'],coupon.coupon_code)
+        self.assertEqual(response.json()['coupon']['reward'],coupon.reward.title)
+        self.assertTrue(response.json()['coupon']['view_url'])
+        self.assertEqual(Coupon.objects.filter(gameplay=gameplay).count(),1)
+        self.assertEqual(self.client.get(urlparse(response.json()['coupon']['view_url']).path).status_code,200)

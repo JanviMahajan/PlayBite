@@ -100,9 +100,9 @@ def generate_coupon_for_gameplay(gameplay):
     """Create one coupon from the exact reward assigned to the scanned table."""
     from games.models import Gameplay
     # Lock only the non-null Gameplay row. PostgreSQL rejects FOR UPDATE when
-    # the same query outer-joins the nullable restaurant_table relationship.
+    # the same query outer-joins nullable relationships such as assigned_reward.
     gameplay = Gameplay.objects.select_for_update().select_related(
-        'restaurant', 'game', 'customer', 'assigned_reward'
+        'restaurant', 'game', 'customer'
     ).get(pk=gameplay.pk)
     existing = Coupon.objects.filter(gameplay=gameplay).first()
     if existing:

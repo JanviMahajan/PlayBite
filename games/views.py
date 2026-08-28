@@ -103,8 +103,16 @@ class GameSubmitView(View):
                 coupon = generate_coupon_for_gameplay(gameplay)
             except Exception:
                 logger.exception('Could not generate coupon for gameplay %s', gameplay.pk)
-                coupon = None
-                coupon_error = 'coupon_generation_failed'
+                # A previous/idempotent path may already have committed the
+                # gameplay's one coupon before a non-critical operation failed.
+                coupon = gameplay.coupons.select_related('reward').first()
+                if coupon:
+                    logger.warning(
+                        'Recovered existing coupon %s for gameplay %s after generator error',
+                        coupon.pk, gameplay.pk,
+                    )
+                else:
+                    coupon_error = 'coupon_generation_failed'
             if coupon:
                 coupon_data = {
                     'id': coupon.pk,

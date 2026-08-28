@@ -83,8 +83,14 @@ export default class GameEngine {
       if (result.coupon_error === 'coupon_generation_failed') {
         this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">📡</div><h1>${this.strings.couldNotStart}</h1><p>${this.strings.connection}</p><button class="pb-primary-button" onclick="location.reload()">${this.strings.refresh}</button></div>`; return;
       }
-      const message=result.coupon_error==='no_table_reward'?this.strings.noTableReward:'No active reward is available for this table. Please ask the restaurant team to activate it.';
-      this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>Game complete!</h1><p>${message}</p><a class="pb-primary-button" href="/">Done</a></div>`; return;
+      if (result.coupon_error === 'no_table_reward') {
+        this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>Game complete!</h1><p>${this.strings.noTableReward}</p><a class="pb-primary-button" href="/">${this.strings.done}</a></div>`; return;
+      }
+      if (result.coupon_error === 'no_active_reward') {
+        this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>Game complete!</h1><p>No active reward is available for this table. Please ask the restaurant team to activate it.</p><a class="pb-primary-button" href="/">${this.strings.done}</a></div>`; return;
+      }
+      const message='Your win was saved, but we could not load the coupon yet. Please refresh to recover it.';
+      this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">📡</div><h1>Result saved</h1><p>${message}</p><button class="pb-primary-button" onclick="location.reload()">${this.strings.refresh}</button></div>`; return;
     }
     if (this.slug === 'tap-at-ten' && coupon?.view_url && Number.isFinite(result.stopped_at_seconds)) {
       const stopped=Number(result.stopped_at_seconds).toFixed(1);
