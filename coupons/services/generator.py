@@ -95,8 +95,18 @@ def generate_coupon_for_gameplay(gameplay):
         )
         return None
     if not gameplay.assigned_reward_id:
-        logger.warning('No reward is configured for table %s (gameplay %s)', table.pk, gameplay.pk)
-        return None
+        # The owner may configure a reward after today's gameplay was assigned.
+        # Recover server-side so the consumed daily attempt can still earn it.
+        candidates = list(
+            eligible_rewards_for_gameplay(gameplay).filter(
+                applicable_tables=table,
+            ).distinct()
+        )
+        if not candidates:
+            logger.warning('No reward is configured for table %s (gameplay %s)', table.pk, gameplay.pk)
+            return None
+        gameplay.assigned_reward = secrets.choice(candidates)
+        gameplay.save(update_fields=['assigned_reward', 'updated_at'])
     reward = gameplay.assigned_reward
     if reward.restaurant_id != gameplay.restaurant_id:
         logger.error(

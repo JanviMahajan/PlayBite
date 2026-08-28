@@ -127,6 +127,20 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(response.json()['coupon_error'],'no_table_reward')
         self.assertFalse(Coupon.objects.filter(gameplay=gameplay).exists())
 
+    def test_reward_configured_after_assignment_still_generates_coupon(self):
+        self.reward.applicable_tables.remove(self.table)
+        gameplay=self.start(self.assign())
+        self.assertIsNone(gameplay.assigned_reward_id)
+        self.reward.applicable_tables.add(self.table)
+        gameplay,_,_=submit_gameplay(
+            gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay),
+        )
+        coupon=generate_coupon_for_gameplay(gameplay)
+        gameplay.refresh_from_db()
+        self.assertIsNotNone(coupon)
+        self.assertEqual(gameplay.assigned_reward,self.reward)
+        self.assertEqual(coupon.reward,self.reward)
+
     def test_changing_table_reward_does_not_change_historical_coupon(self):
         original=Reward.objects.create(restaurant=self.restaurant,title='Original Table Reward')
         replacement=Reward.objects.create(restaurant=self.restaurant,title='Replacement Table Reward')

@@ -121,6 +121,7 @@ class GameSubmitView(View):
                     logger.exception('Could not build coupon response for gameplay %s', gameplay.pk)
                     coupon_error = 'coupon_url_unavailable'
             else:
+                gameplay.refresh_from_db(fields=['assigned_reward'])
                 coupon_error = (
                     'no_table_reward'
                     if not gameplay.restaurant_table_id or not gameplay.assigned_reward_id
