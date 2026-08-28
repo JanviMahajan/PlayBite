@@ -349,6 +349,10 @@ class GameplayFlowTests(TestCase):
         gameplay.refresh_from_db();payload={'outcome':'completed','evidence':self.winning_evidence(gameplay)}
         result=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json')
         self.assertEqual(result.status_code,200);self.assertTrue(result.json()['won']);self.assertEqual(Coupon.objects.count(),1)
+        coupon=Coupon.objects.get()
+        self.assertEqual(result.json()['coupon']['id'],coupon.pk)
+        self.assertEqual(result.json()['coupon']['reward_id'],coupon.reward_id)
+        self.assertEqual(result.json()['coupon']['reward'],coupon.reward.title)
         self.assertIn('/coupon/view/', result.json()['coupon']['view_url'])
         duplicate=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json');self.assertEqual(duplicate.status_code,409)
         refreshed=self.client.get(reverse('games:game_play',args=[gameplay.game.slug]));self.assertContains(refreshed,'That’s all for today!')

@@ -106,7 +106,9 @@ class GameSubmitView(View):
                 coupon = None
             if coupon:
                 coupon_data = {
+                    'id': coupon.pk,
                     'code': coupon.coupon_code,
+                    'reward_id': coupon.reward_id,
                     'reward': coupon.reward.title,
                     'valid_from': coupon.valid_from.isoformat() if coupon.valid_from else None,
                     'expiry_at': coupon.expiry_at.isoformat() if coupon.expiry_at else None,
