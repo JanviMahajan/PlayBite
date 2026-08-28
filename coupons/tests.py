@@ -1,5 +1,6 @@
 from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -10,7 +11,7 @@ from django.utils import timezone
 
 from customer.models import Customer
 from games.models import Game
-from restaurants.models import Branch, Restaurant
+from restaurants.models import Branch, Restaurant, RestaurantTable
 from .forms import RewardForm
 from .models import Coupon, Reward
 from .services.redeemer import redeem_coupon
@@ -150,6 +151,34 @@ class CustomerCouponTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         reward = form.save(commit=False)
         self.assertEqual(reward.game_eligibility, Reward.GameEligibility.ALL)
+
+    def test_new_all_game_reward_fills_only_unconfigured_tables(self):
+        branch = Branch.objects.create(restaurant=self.restaurant, branch_name='Main')
+        existing = Reward.objects.create(restaurant=self.restaurant, title='Existing')
+        with patch.object(RestaurantTable, 'generate_qr_image'):
+            configured = RestaurantTable.objects.create(
+                branch=branch, table_number='1', reward=existing,
+            )
+            unconfigured = RestaurantTable.objects.create(branch=branch, table_number='2')
+
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse('coupons:reward_create'), {
+            'title': 'Visible Treat',
+            'description': 'Available at unconfigured tables',
+            'reward_type': Reward.RewardType.FREE_ITEM,
+            'coupon_valid_days': 7,
+            'is_active': True,
+        })
+
+        self.assertRedirects(response, reverse('coupons:reward_list'))
+        created = Reward.objects.get(title='Visible Treat')
+        configured.refresh_from_db()
+        unconfigured.refresh_from_db()
+        self.assertEqual(configured.reward, existing)
+        self.assertEqual(unconfigured.reward, created)
+
+        list_response = self.client.get(reverse('coupons:reward_list'))
+        self.assertContains(list_response, 'Assigned to 1 table')
 
     def test_manual_redemption_redirects_to_staff_result(self):
         branch = Branch.objects.create(

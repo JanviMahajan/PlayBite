@@ -17,6 +17,7 @@
                 <p>{% if r.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</p>
                 <p class="small text-muted">{{ r.description }}</p>
                 <p class="small text-muted"><strong>Games:</strong> {% if r.game_eligibility == 'all' %}All games{% else %}{% for game in r.eligible_games.all %}{{ game.name }}{% if not forloop.last %}, {% endif %}{% empty %}No games selected{% endfor %}{% endif %}</p>
+                <p class="small text-muted"><strong>Tables:</strong> {% if r.assigned_table_count %}Assigned to {{ r.assigned_table_count }} table{{ r.assigned_table_count|pluralize }}{% else %}<span class="text-warning-emphasis">Not assigned to a table</span> · <a href="{% url 'restaurants:table_list' %}">Assign now</a>{% endif %}</p>
                 <p class="small text-muted">Available: {{ r.start_date|default:"Immediately" }} – {{ r.end_date|default:"No end date" }}</p>
                 <p><strong>Type:</strong> {{ r.get_reward_type_display }} • Awarded when the game objective is completed</p>
                 <div class="d-flex flex-wrap gap-2 justify-content-between mt-2">
