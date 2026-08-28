@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -10,7 +11,7 @@ from customer.models import Customer
 from coupons.models import Reward
 from games.models import Gameplay
 from .models import Branch, Restaurant, RestaurantTable
-from .forms import BranchForm, TableForm
+from .forms import BranchForm, RestaurantProfileForm, TableForm
 
 
 class CustomerEntryTests(TestCase):
@@ -27,6 +28,7 @@ class CustomerEntryTests(TestCase):
         response = self.client.post(reverse('play_start', args=[self.table.qr_slug]), {'full_name':'Guest','phone_number':'+91 98765 43210'})
         self.assertEqual(response.status_code, 302)
         customer = Customer.objects.get(phone_number='+919876543210')
+        self.assertEqual(customer.whatsapp_number, '+919876543210')
         gameplay = Gameplay.objects.get(customer=customer)
         self.assertIn(gameplay.game.slug, {'burger-stack','order-rush','memory-match','pizza-slice','tap-at-ten'})
         self.assertEqual(self.client.session['play_session']['gameplay_id'], gameplay.pk)
@@ -35,6 +37,74 @@ class CustomerEntryTests(TestCase):
         response = self.client.post(reverse('play_start', args=[self.table.qr_slug]), {'full_name':'Guest','phone_number':'12'})
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Customer.objects.exists())
+
+    def test_india_restaurant_defaults_to_india_country_code(self):
+        response=self.client.get(reverse('play_start',args=[self.table.qr_slug]))
+        self.assertContains(response,'value="IN" selected')
+        self.assertContains(response,'+91')
+
+    def test_uae_restaurant_defaults_to_uae_country_code(self):
+        self.restaurant.country=Restaurant.Country.UAE
+        self.restaurant.save(update_fields=['country','updated_at'])
+        response=self.client.get(reverse('play_start',args=[self.table.qr_slug]))
+        self.assertContains(response,'value="AE" selected')
+        self.assertContains(response,'+971')
+
+    def test_uae_local_number_is_stored_in_e164_format(self):
+        self.restaurant.country=Restaurant.Country.UAE
+        self.restaurant.save(update_fields=['country','updated_at'])
+        self.client.post(
+            reverse('play_start',args=[self.table.qr_slug]),
+            {'full_name':'UAE Guest','phone_country':'AE','phone_number':'050 123 4567'},
+        )
+        customer=Customer.objects.get(phone_number='+971501234567')
+        self.assertEqual(customer.whatsapp_number,'+971501234567')
+
+    def test_tourists_can_override_the_restaurant_country(self):
+        self.restaurant.country=Restaurant.Country.UAE
+        self.restaurant.save(update_fields=['country','updated_at'])
+        self.client.post(
+            reverse('play_start',args=[self.table.qr_slug]),
+            {'full_name':'Indian Tourist','phone_country':'IN','phone_number':'98765 43210'},
+        )
+        self.assertTrue(Customer.objects.filter(phone_number='+919876543210').exists())
+
+        self.restaurant.country=Restaurant.Country.INDIA
+        self.restaurant.save(update_fields=['country','updated_at'])
+        self.client.post(
+            reverse('play_start',args=[self.table.qr_slug]),
+            {'full_name':'UAE Tourist','phone_country':'AE','phone_number':'050 765 4321'},
+        )
+        self.assertTrue(Customer.objects.filter(phone_number='+971507654321').exists())
+
+    def test_phone_formatting_variations_cannot_bypass_daily_play(self):
+        url=reverse('play_start',args=[self.table.qr_slug])
+        first=self.client.post(url,{'full_name':'Guest','phone_country':'IN','phone_number':'98765 43210'})
+        second=self.client.post(url,{'full_name':'Guest','phone_country':'IN','phone_number':'+91 98765-43210'})
+        self.assertEqual(first.status_code,302)
+        self.assertEqual(second.status_code,200)
+        self.assertEqual(Customer.objects.filter(phone_number='+919876543210').count(),1)
+        self.assertEqual(Gameplay.objects.filter(customer__phone_number='+919876543210').count(),1)
+
+    def test_existing_normalized_indian_customer_is_reused(self):
+        existing=Customer.objects.create(
+            full_name='Existing Indian',phone_number='+919876543210',whatsapp_number='+919876543210',
+        )
+        self.client.post(
+            reverse('play_start',args=[self.table.qr_slug]),
+            {'full_name':'Existing Indian','phone_country':'IN','phone_number':'09876543210'},
+        )
+        self.assertEqual(Customer.objects.get(phone_number='+919876543210').pk,existing.pk)
+
+    def test_arabic_invalid_phone_message_and_mobile_input(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME]='ar'
+        url=reverse('play_start',args=[self.table.qr_slug])
+        page=self.client.get(url)
+        self.assertContains(page,'inputmode="tel"')
+        response=self.client.post(
+            url,{'full_name':'Guest','phone_country':'AE','phone_number':'12'},
+        )
+        self.assertContains(response,'أدخل رقم هاتف صالحًا.',status_code=400)
 
     def test_table_qr_url_uses_public_play_route(self):
         self.assertEqual(
@@ -77,6 +147,10 @@ class BranchFormTests(TestCase):
         form = BranchForm()
         self.assertNotIn('latitude', form.fields)
         self.assertNotIn('longitude', form.fields)
+
+    def test_restaurant_country_is_limited_to_india_and_uae(self):
+        choices=dict(RestaurantProfileForm().fields['country'].choices)
+        self.assertEqual(set(choices),{'IN','AE'})
 
 
 class TableRewardOwnerTests(TestCase):

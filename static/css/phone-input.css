@@ -1,0 +1,33 @@
+.phone-input-group {
+  display: grid;
+  grid-template-columns: minmax(108px, 34%) 1fr;
+  gap: 9px;
+}
+
+.phone-input-group select {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 10px;
+  border: 1px solid #bda99a;
+  border-radius: 14px;
+  background: #fff;
+  color: #2f211b;
+  font-weight: 700;
+}
+
+.phone-input-group select:focus {
+  outline: 3px solid #f7b58b;
+  border-color: #e8773f;
+}
+
+@media (max-width: 390px) {
+  .phone-input-group {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  .phone-input-group select,
+  .phone-input-group input {
+    padding-inline: 10px;
+  }
+}

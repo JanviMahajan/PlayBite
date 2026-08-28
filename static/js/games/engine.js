@@ -61,6 +61,12 @@ export default class GameEngine {
   }
   showResult(result) {
     if (!result.won) {
+      if (this.slug === 'tap-at-ten' && Number.isFinite(result.stopped_at_seconds)) {
+        const stopped=Number(result.stopped_at_seconds), close=Math.abs(stopped-10)<=1.5;
+        const title=close?this.strings.soCloseTitle:this.strings.tooFarTitle;
+        const ending=close?this.strings.almostPerfect:this.strings.betterLuck;
+        this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero fail">⏱️</div><h1>${title}</h1><p>${this.strings.stoppedAt} <strong>${stopped.toFixed(1)} ${this.strings.seconds}</strong>. ${ending}</p><a class="pb-primary-button" href="/">${this.strings.tomorrow}</a></div>`; return;
+      }
       if (this.slug === 'order-rush' && this.outcome === 'mistakes') {
         this.root.innerHTML='<div class="pb-result"><div class="pb-game-hero fail">🧾</div><h1>Oops! Too many incorrect taps!</h1><p>Today’s order challenge is over. Come back tomorrow and try again! ✨</p><a class="pb-primary-button" href="/">See You Tomorrow</a></div>'; return;
       }
@@ -76,6 +82,11 @@ export default class GameEngine {
     if (!coupon) {
       const message=result.coupon_error==='no_table_reward'?this.strings.noTableReward:'No active reward is available for this table. Please ask the restaurant team to activate it.';
       this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>Game complete!</h1><p>${message}</p><a class="pb-primary-button" href="/">Done</a></div>`; return;
+    }
+    if (this.slug === 'tap-at-ten' && coupon?.view_url && Number.isFinite(result.stopped_at_seconds)) {
+      const stopped=Number(result.stopped_at_seconds).toFixed(1);
+      this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">☕</div><h1>${this.strings.perfectTiming}</h1><p>${this.strings.stoppedAt} <strong>${stopped} ${this.strings.seconds}</strong>.</p><a class="pb-primary-button" href="${coupon.view_url}">${this.strings.viewReward}</a></div>`;
+      window.setTimeout(() => window.location.assign(coupon.view_url), 1800); return;
     }
     if (coupon?.view_url) { window.setTimeout(() => window.location.assign(coupon.view_url), 450); return; }
     this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>${this.strings.didIt}</h1><p>${this.strings.unlocked}</p>${coupon?`<div class="pb-coupon"><span>${coupon.reward}</span><code>${coupon.code}</code><small>${this.strings.validFrom} ${new Date(coupon.valid_from).toLocaleDateString(document.documentElement.lang)}</small></div>`:''}<a class="pb-primary-button" href="/">${this.strings.done}</a></div>`;

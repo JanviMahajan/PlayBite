@@ -10,6 +10,10 @@ from playbite.models import TimeStampedModel
 
 
 class Restaurant(TimeStampedModel):
+    class Country(models.TextChoices):
+        INDIA = 'IN', _('India')
+        UAE = 'AE', _('United Arab Emirates')
+
     owner = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -23,7 +27,9 @@ class Restaurant(TimeStampedModel):
     address = models.CharField(_('address'), max_length=512, blank=True)
     city = models.CharField(_('city'), max_length=128, blank=True)
     state = models.CharField(_('state'), max_length=128, blank=True)
-    country = models.CharField(_('country'), max_length=128, blank=True)
+    country = models.CharField(
+        _('country'), max_length=2, choices=Country.choices, default=Country.INDIA,
+    )
     pincode = models.CharField(_('pincode'), max_length=32, blank=True)
     description = models.TextField(_('description'), blank=True)
     opening_time = models.TimeField(_('opening time'), null=True, blank=True)

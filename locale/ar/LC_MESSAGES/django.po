@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 06:59+0000\n"
+"POT-Creation-Date: 2026-08-28 10:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -216,44 +216,29 @@ msgstr ""
 msgid "reason"
 msgstr ""
 
-msgid "View Coupon"
-msgstr "عرض القسيمة"
+msgid "redemption"
+msgstr ""
 
-msgid "Save Coupon"
-msgstr "حفظ القسيمة"
-
-msgid "WhatsApp"
-msgstr "واتساب"
-
-msgid "Keep this coupon for your next visit ✨"
-msgstr "احتفظ بهذه القسيمة لزيارتك القادمة ✨"
-
-msgid "Ready to Use"
-msgstr "جاهزة للاستخدام"
-
-msgid "Available Tomorrow"
-msgstr "متاحة غدًا"
-
-msgid "Already Redeemed"
-msgstr "تم استخدامها بالفعل"
-
-msgid "You Won!"
-msgstr "لقد فزت!"
-
-msgid "Coupon"
-msgstr "القسيمة"
-
-msgid "Coupon QR code for staff"
-msgstr "رمز QR للقسيمة للموظفين"
-
-msgid "Generated"
-msgstr "تاريخ الإصدار"
+msgid "redemptions"
+msgstr ""
 
 msgid "Valid From"
 msgstr "صالحة من"
 
 msgid "Expires"
 msgstr "تنتهي في"
+
+msgid "Keep this coupon for your next visit ✨"
+msgstr "احتفظ بهذه القسيمة لزيارتك القادمة ✨"
+
+msgid "Already Redeemed"
+msgstr "تم استخدامها بالفعل"
+
+msgid "Available Tomorrow"
+msgstr "متاحة غدًا"
+
+msgid "Ready to Use"
+msgstr "جاهزة للاستخدام"
 
 msgid "🎉 I won a PlayBite treat!"
 msgstr "🎉 لقد ربحت مكافأة من PlayBite!"
@@ -276,12 +261,6 @@ msgstr "عرض قسيمتي:"
 msgid "I'll be back for my treat! ✨"
 msgstr "سأعود للحصول على مكافأتي! ✨"
 
-msgid "redemption"
-msgstr ""
-
-msgid "redemptions"
-msgstr ""
-
 msgid "phone number"
 msgstr ""
 
@@ -293,6 +272,15 @@ msgstr ""
 
 msgid "customers"
 msgstr ""
+
+msgid "India"
+msgstr "الهند"
+
+msgid "United Arab Emirates"
+msgstr "الإمارات العربية المتحدة"
+
+msgid "Enter a valid phone number."
+msgstr "أدخل رقم هاتف صالحًا."
 
 msgid "Easy"
 msgstr ""
@@ -362,14 +350,16 @@ msgstr "أسقط المكونات في اللحظة المناسبة وابنِ 
 msgid "Watch the ingredient move."
 msgstr "راقب المكوّن وهو يتحرك."
 
-msgid "Tap anywhere to drop it."
-msgstr "اضغط في أي مكان لإسقاطه."
+msgid "Tap when it is above the burger tray."
+msgstr ""
 
-msgid "Stack all the ingredients."
-msgstr "رتّب جميع المكونات فوق بعضها."
+msgid "A fall outside the tray ends the game."
+msgstr ""
 
-msgid "Finish before the timer reaches the flag!"
-msgstr "أكمل قبل أن يصل المؤقت إلى العلم!"
+#, fuzzy
+#| msgid "Find all the matching food pairs before time runs out!"
+msgid "Stack every ingredient before time runs out!"
+msgstr "اعثر على كل أزواج الطعام المتطابقة قبل انتهاء الوقت!"
 
 msgid "Let's Stack! 🍔"
 msgstr "لنبدأ الترتيب! 🍔"
@@ -385,14 +375,14 @@ msgstr "هناك زبون جائع ينتظر! احفظ طلبه وأعد ترت
 msgid "Memorize the order."
 msgstr "احفظ الطلب."
 
-msgid "The order will disappear."
-msgstr "سيختفي الطلب."
-
 msgid "Tap the items in the same order."
 msgstr "اضغط على العناصر بالترتيب نفسه."
 
-msgid "Complete it before the flag!"
-msgstr "أكمله قبل وصول المؤقت إلى العلم!"
+msgid "Two incorrect taps are allowed."
+msgstr ""
+
+msgid "A third incorrect tap ends the game!"
+msgstr ""
 
 msgid "I'm Ready! 👀"
 msgstr "أنا جاهز! 👀"
@@ -427,20 +417,45 @@ msgstr "اختر توقيت ضغطاتك واقطع البيتزا في اللح
 msgid "Watch the moving cutter."
 msgstr "راقب أداة القطع المتحركة."
 
-msgid "Wait for the highlighted zone."
-msgstr "انتظر حتى تصل إلى المنطقة المضيئة."
+msgid "Wait until it enters the green zone."
+msgstr ""
 
-msgid "Tap to make the cut."
-msgstr "اضغط لتنفيذ القطع."
+msgid "Tap only inside the green zone—a miss ends the game."
+msgstr ""
 
-msgid "Complete three cuts in time!"
+#, fuzzy
+#| msgid "Complete three cuts in time!"
+msgid "Complete three perfect cuts in time!"
 msgstr "أكمل ثلاث قطعات قبل انتهاء الوقت!"
 
 msgid "Slice It! 🍕"
 msgstr "اقطعها! 🍕"
 
-msgid "Enter a valid phone number."
+msgid "Tap at 10 Seconds!"
 msgstr ""
+
+msgid ""
+"Trust your inner clock and stop as close to 10 seconds as you can to win a "
+"free coffee!"
+msgstr ""
+
+msgid "Press start and watch 1, 2, 3, GO!"
+msgstr ""
+
+msgid "Wait for the STOP button to appear."
+msgstr ""
+
+msgid "Start counting only when you see STOP."
+msgstr ""
+
+msgid "Press STOP when your count reaches 10!"
+msgstr ""
+
+msgid "Start! ☕"
+msgstr ""
+
+msgid "Not configured"
+msgstr "غير مُعدّة"
 
 msgid "Table number must be unique within the branch."
 msgstr ""
@@ -508,6 +523,10 @@ msgstr ""
 msgid "tables"
 msgstr ""
 
+msgid "The selected reward must belong to the same restaurant as this table."
+msgstr ""
+"يجب أن تنتمي المكافأة المحددة إلى المطعم نفسه الذي تنتمي إليه هذه الطاولة."
+
 msgid "Owner login"
 msgstr "دخول مالك المطعم"
 
@@ -522,6 +541,45 @@ msgstr "نسيت كلمة المرور؟"
 
 msgid "Create account"
 msgstr "إنشاء حساب"
+
+msgid "Owner access"
+msgstr "دخول المالك"
+
+msgid "Enter the 4-digit PIN to continue to owner login or registration."
+msgstr "أدخل رمز PIN المكوّن من 4 أرقام للمتابعة إلى تسجيل دخول المالك أو إنشاء حساب."
+
+msgid "Incorrect PIN. Please try again."
+msgstr "رمز PIN غير صحيح. حاول مرة أخرى."
+
+msgid "4-digit PIN"
+msgstr "رمز PIN من 4 أرقام"
+
+msgid "Four numbers only"
+msgstr "أربعة أرقام فقط"
+
+msgid "Continue"
+msgstr "متابعة"
+
+msgid "View Coupon"
+msgstr "عرض القسيمة"
+
+msgid "You Won!"
+msgstr "لقد فزت!"
+
+msgid "Coupon"
+msgstr "القسيمة"
+
+msgid "Coupon QR code for staff"
+msgstr "رمز QR للقسيمة للموظفين"
+
+msgid "Generated"
+msgstr "تاريخ الإصدار"
+
+msgid "WhatsApp"
+msgstr "واتساب"
+
+msgid "Save Coupon"
+msgstr "حفظ القسيمة"
 
 msgid "Staff Portal"
 msgstr "بوابة الموظفين"
@@ -603,6 +661,33 @@ msgstr "لقد ربحت مكافأة لذيذة!"
 msgid "Done"
 msgstr "تم"
 
+msgid "You stopped at"
+msgstr "لقد توقفت عند"
+
+msgid "seconds"
+msgstr "ثوانٍ"
+
+msgid "So close!"
+msgstr "كنت قريبًا جدًا!"
+
+msgid "Too far!"
+msgstr "بعيد جدًا!"
+
+msgid "You were almost perfect—better luck next time!"
+msgstr "كنت قريبًا جدًا من التوقيت المثالي—حظًا أوفر في المرة القادمة!"
+
+msgid "Better luck next time!"
+msgstr "حظًا أوفر في المرة القادمة!"
+
+msgid "Perfect timing! Free coffee unlocked!"
+msgstr "توقيت مثالي! لقد ربحت قهوة مجانية!"
+
+msgid "View Reward"
+msgstr "عرض المكافأة"
+
+msgid "No reward is configured for this table."
+msgstr "لم يتم إعداد مكافأة لهذه الطاولة."
+
 msgid "Burger complete! 🍔✨"
 msgstr "اكتمل البرغر! 🍔✨"
 
@@ -632,6 +717,12 @@ msgstr "مثال: جنى"
 
 msgid "WhatsApp / Phone"
 msgstr "واتساب / الهاتف"
+
+msgid "Country code"
+msgstr "رمز الدولة"
+
+msgid "Phone number"
+msgstr "رقم الهاتف"
 
 msgid "Continue to my game ✨"
 msgstr "المتابعة إلى لعبتي ✨"
@@ -715,23 +806,11 @@ msgstr "تصبح القسيمة صالحة بدءًا من الغد"
 msgid "Redeem before it expires"
 msgstr "استخدمها قبل انتهاء صلاحيتها"
 
-msgid "Reward"
-msgstr "المكافأة"
-
-msgid "Edit Reward"
-msgstr "تعديل المكافأة"
-
-msgid "Assign Reward"
-msgstr "تعيين مكافأة"
-
-msgid "Not configured"
-msgstr "غير مُعدّة"
-
-msgid "Select Reward"
-msgstr "اختر المكافأة"
-
 msgid "Create New Reward"
 msgstr "إنشاء مكافأة جديدة"
+
+msgid "Reward"
+msgstr "المكافأة"
 
 msgid "View QR"
 msgstr "عرض رمز QR"
@@ -739,8 +818,8 @@ msgstr "عرض رمز QR"
 msgid "Edit Table"
 msgstr "تعديل الطاولة"
 
-msgid "No reward is configured for this table."
-msgstr "لم يتم إعداد مكافأة لهذه الطاولة."
+msgid "Edit Reward"
+msgstr "تعديل المكافأة"
 
-msgid "The selected reward must belong to the same restaurant as this table."
-msgstr "يجب أن تنتمي المكافأة المحددة إلى المطعم نفسه الذي تنتمي إليه هذه الطاولة."
+msgid "Assign Reward"
+msgstr "تعيين مكافأة"

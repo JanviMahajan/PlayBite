@@ -26,6 +26,9 @@ DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost 127.0.0.1').replace(',', ' ').split()
 DEMO_MODE = os.getenv('DEMO_MODE', 'False').lower() in {'1', 'true', 'yes'}
 PUBLIC_BASE_URL = (os.getenv('PUBLIC_BASE_URL') or os.getenv('SITE_URL') or '').strip().rstrip('/')
+OWNER_ACCESS_PIN = os.getenv('OWNER_ACCESS_PIN', '8888').strip()
+if len(OWNER_ACCESS_PIN) != 4 or not OWNER_ACCESS_PIN.isdigit():
+    raise ImproperlyConfigured('OWNER_ACCESS_PIN must contain exactly four digits.')
 
 if IS_RENDER:
     if SECRET_KEY == 'django-insecure-replace-me-with-env':

@@ -1,7 +1,7 @@
 {% extends 'base_clean.html' %}
 {% load static i18n %}
 {% block title %}Play & Win · {{ restaurant.restaurant_name }}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'css/play.css' %}">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/play.css' %}"><link rel="stylesheet" href="{% static 'css/phone-input.css' %}">{% endblock %}
 {% block content %}
 <main class="play-page"><section class="identity-card">
   <div class="identity-icon">🎁</div><span class="play-kicker">{% translate "One tiny step" %}</span>
@@ -9,7 +9,13 @@
   <p>{% translate "No account needed. This also keeps today’s challenge fair for everyone." %}</p>
   <form method="post" novalidate>{% csrf_token %}
     <label for="full_name">{% translate "Your name" %}</label><input id="full_name" name="full_name" value="{{ full_name }}" autocomplete="name" maxlength="120" required placeholder="{% translate 'e.g. Janvi' %}">
-    <label for="phone_number">{% translate "WhatsApp / Phone" %}</label><input id="phone_number" name="phone_number" value="{{ phone_number }}" autocomplete="tel" inputmode="tel" required placeholder="e.g. +91 98765 43210">
+    <label for="phone_number">{% translate "WhatsApp / Phone" %}</label>
+    <div class="phone-input-group">
+      <select id="phone_country" name="phone_country" aria-label="{% translate 'Country code' %}">
+        {% for code, option in phone_countries.items %}<option value="{{ code }}" {% if phone_country == code %}selected{% endif %}>{% if code == 'IN' %}🇮🇳{% else %}🇦🇪{% endif %} {{ option.calling_code }}</option>{% endfor %}
+      </select>
+      <input id="phone_number" name="phone_number" value="{{ phone_number }}" autocomplete="tel" inputmode="tel" required placeholder="{% translate 'Phone number' %}">
+    </div>
     {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
     <button class="play-primary" type="submit">{% translate "Continue to my game ✨" %}</button>
   </form><small>{% blocktranslate with restaurant_name=restaurant.restaurant_name %}One play per day at {{ restaurant_name }}.{% endblocktranslate %}</small>

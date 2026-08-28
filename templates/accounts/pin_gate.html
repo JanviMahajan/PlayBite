@@ -1,0 +1,26 @@
+{% extends 'base.html' %}{% load i18n %}
+
+{% block title %}{% translate "Owner access" %} | PlayBite{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-sm-9 col-md-7 col-lg-5">
+    <div class="card auth-card shadow-sm border-0">
+      <div class="card-body auth-card-body p-4 p-sm-5 text-center">
+        <div class="fs-1 mb-3" aria-hidden="true">🔐</div>
+        <h1 class="h4 mb-2">{% translate "Owner access" %}</h1>
+        <p class="text-muted mb-4">{% translate "Enter the 4-digit PIN to continue to owner login or registration." %}</p>
+        {% if error %}<div class="alert alert-danger" role="alert">{% translate "Incorrect PIN. Please try again." %}</div>{% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next }}">
+          <label class="form-label visually-hidden" for="id_owner_pin">{% translate "4-digit PIN" %}</label>
+          <input class="form-control form-control-lg text-center mb-3" id="id_owner_pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" autocomplete="one-time-code" required autofocus aria-describedby="pin-help">
+          <div id="pin-help" class="form-text mb-3">{% translate "Four numbers only" %}</div>
+          <button class="btn btn-warning btn-lg w-100 text-white" type="submit">{% translate "Continue" %}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

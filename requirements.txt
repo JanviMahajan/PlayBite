@@ -6,3 +6,4 @@ qrcode==8.2
 dj-database-url==3.0.1
 gunicorn==23.0.0
 whitenoise==6.9.0
+phonenumbers==9.0.37

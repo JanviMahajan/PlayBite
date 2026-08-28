@@ -8,7 +8,32 @@ User = get_user_model()
 
 
 class OwnerAuthenticationTests(TestCase):
+    def unlock_owner_access(self, next_url=None):
+        return self.client.post(
+            reverse('accounts:pin_gate'),
+            {'pin': '8888', 'next': next_url or reverse('accounts:login')},
+        )
+
+    def test_login_and_registration_require_owner_pin(self):
+        login_url = reverse('accounts:login')
+        register_url = reverse('accounts:register')
+        gate_url = reverse('accounts:pin_gate')
+
+        self.assertRedirects(self.client.get(login_url), f'{gate_url}?next={login_url}')
+        self.assertRedirects(self.client.get(register_url), f'{gate_url}?next={register_url}')
+
+        rejected = self.client.post(gate_url, {'pin': '1234', 'next': register_url})
+        self.assertEqual(rejected.status_code, 400)
+        self.assertNotIn('owner_pin_verified', self.client.session)
+
+        accepted = self.unlock_owner_access(register_url)
+        self.assertRedirects(accepted, register_url)
+        self.assertTrue(self.client.session['owner_pin_verified'])
+        self.assertEqual(self.client.get(login_url).status_code, 200)
+        self.assertEqual(self.client.get(register_url).status_code, 200)
+
     def test_owner_registration_creates_account_and_restaurant(self):
+        self.unlock_owner_access(reverse('accounts:register'))
         response = self.client.post(
             reverse('accounts:register'),
             {
@@ -29,7 +54,11 @@ class OwnerAuthenticationTests(TestCase):
 
     def test_owner_dashboard_requires_owner_access(self):
         response = self.client.get(reverse('accounts:dashboard'))
-        self.assertRedirects(response, f"{reverse('accounts:login')}?next={reverse('accounts:dashboard')}")
+        self.assertRedirects(
+            response,
+            f"{reverse('accounts:login')}?next={reverse('accounts:dashboard')}",
+            fetch_redirect_response=False,
+        )
 
         staff_user = User.objects.create_user(
             email='staff@example.com',

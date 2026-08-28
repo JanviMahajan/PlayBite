@@ -24,7 +24,7 @@ class RestaurantProfileForm(forms.ModelForm):
             'address': forms.TextInput(attrs={'class': 'form-control'}),
             'city': forms.TextInput(attrs={'class': 'form-control'}),
             'state': forms.TextInput(attrs={'class': 'form-control'}),
-            'country': forms.TextInput(attrs={'class': 'form-control'}),
+            'country': forms.Select(attrs={'class': 'form-select'}),
             'pincode': forms.TextInput(attrs={'class': 'form-control'}),
             'opening_time': forms.TimeInput(format='%H:%M', attrs={'class': 'form-control', 'type': 'time'}),
             'closing_time': forms.TimeInput(format='%H:%M', attrs={'class': 'form-control', 'type': 'time'}),

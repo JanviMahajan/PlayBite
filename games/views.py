@@ -128,6 +128,10 @@ class GameSubmitView(View):
             'ok': True,
             'won': gameplay.result == Gameplay.Result.WON,
             'reason': reason,
+            'stopped_at_seconds': (
+                round(gameplay.play_time.total_seconds(), 1)
+                if gameplay.game.slug == 'tap-at-ten' and gameplay.play_time else None
+            ),
             'coupon': coupon_data,
             'coupon_error': coupon_error,
         })

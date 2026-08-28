@@ -287,6 +287,30 @@ class GameplayFlowTests(TestCase):
         )
         self.assertTrue(accepted);self.assertEqual(reason,'objective_incomplete');self.assertEqual(gameplay.result,Gameplay.Result.LOST)
 
+    def test_tap_result_reports_server_measured_stop_time(self):
+        for index,seconds in enumerate((4,9)):
+            self.customer=Customer.objects.create(
+                full_name=f'Timer {seconds}',phone_number=f'+91955500000{index}',
+            )
+            gameplay=self.assign('tap-at-ten')
+            session=self.client.session
+            session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk,'table_id':self.table.pk}
+            session.save()
+            self.client.post(
+                reverse('games:game_start',args=['tap-at-ten']),data='{}',content_type='application/json',
+            )
+            now=timezone.now()
+            Gameplay.objects.filter(pk=gameplay.pk).update(
+                started_at=now-timedelta(seconds=seconds),deadline=now+timedelta(seconds=15-seconds),
+            )
+            response=self.client.post(
+                reverse('games:game_submit',args=['tap-at-ten']),
+                data=json.dumps({'outcome':'completed','evidence':{'tap_ms':seconds*1000}}),
+                content_type='application/json',
+            )
+            self.assertFalse(response.json()['won'])
+            self.assertAlmostEqual(response.json()['stopped_at_seconds'],seconds,delta=.2)
+
     def test_tap_at_ten_awards_game_specific_free_coffee(self):
         coffee=self.restaurant.rewards.get(title='Free Coffee')
         self.table.reward=coffee;self.table.save(update_fields=['reward','updated_at'])

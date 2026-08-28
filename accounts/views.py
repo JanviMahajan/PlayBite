@@ -1,3 +1,7 @@
+import hmac
+from urllib.parse import urlencode, urlsplit
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -9,8 +13,9 @@ from django.contrib.auth.views import (
     PasswordResetView,
     redirect_to_login,
 )
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import FormView, TemplateView
 
@@ -24,6 +29,51 @@ from .forms import (
 )
 
 User = get_user_model()
+
+OWNER_PIN_SESSION_KEY = 'owner_pin_verified'
+
+
+class OwnerPinRequiredMixin:
+    """Require the shared owner-entry PIN once per browser session."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated or request.session.get(OWNER_PIN_SESSION_KEY):
+            return super().dispatch(request, *args, **kwargs)
+        gate_url = f"{reverse_lazy('accounts:pin_gate')}?{urlencode({'next': request.get_full_path()})}"
+        return redirect(gate_url)
+
+
+class OwnerPinGateView(View):
+    template_name = 'accounts/pin_gate.html'
+
+    @staticmethod
+    def _safe_next(request):
+        candidate = request.POST.get('next') or request.GET.get('next')
+        allowed_paths = {str(reverse_lazy('accounts:login')), str(reverse_lazy('accounts:register'))}
+        if (
+            candidate
+            and urlsplit(candidate).path in allowed_paths
+            and url_has_allowed_host_and_scheme(candidate, allowed_hosts={request.get_host()})
+        ):
+            return candidate
+        return str(reverse_lazy('accounts:login'))
+
+    def get(self, request):
+        if request.user.is_authenticated or request.session.get(OWNER_PIN_SESSION_KEY):
+            return redirect(self._safe_next(request))
+        return render(request, self.template_name, {'next': self._safe_next(request)})
+
+    def post(self, request):
+        entered_pin = request.POST.get('pin', '').strip()
+        configured_pin = settings.OWNER_ACCESS_PIN
+        if len(entered_pin) == 4 and entered_pin.isdigit() and hmac.compare_digest(entered_pin, configured_pin):
+            request.session[OWNER_PIN_SESSION_KEY] = True
+            request.session.set_expiry(0)
+            return redirect(self._safe_next(request))
+        return render(request, self.template_name, {
+            'next': self._safe_next(request),
+            'error': 'Incorrect PIN. Please try again.',
+        }, status=400)
 
 
 class OwnerRequiredMixin(UserPassesTestMixin):
@@ -52,7 +102,7 @@ class StaffRequiredMixin(UserPassesTestMixin):
         return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
 
 
-class OwnerRegisterView(FormView):
+class OwnerRegisterView(OwnerPinRequiredMixin, FormView):
     template_name = 'accounts/register.html'
     form_class = OwnerRegistrationForm
     success_url = reverse_lazy('accounts:dashboard')
@@ -69,7 +119,7 @@ class OwnerRegisterView(FormView):
         return super().form_valid(form)
 
 
-class OwnerLoginView(LoginView):
+class OwnerLoginView(OwnerPinRequiredMixin, LoginView):
     template_name = 'accounts/login.html'
     authentication_form = OwnerAuthenticationForm
     redirect_authenticated_user = True

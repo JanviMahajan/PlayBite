@@ -6,6 +6,7 @@ from .views import (
     OwnerDashboardView,
     OwnerLoginView,
     OwnerLogoutView,
+    OwnerPinGateView,
     OwnerPasswordResetCompleteView,
     OwnerPasswordResetConfirmView,
     OwnerPasswordResetDoneView,
@@ -17,6 +18,7 @@ app_name = 'accounts'
 
 urlpatterns = [
     path('', RedirectView.as_view(url=reverse_lazy('accounts:login')), name='index'),
+    path('access/', OwnerPinGateView.as_view(), name='pin_gate'),
     path('register/', OwnerRegisterView.as_view(), name='register'),
     path('login/', OwnerLoginView.as_view(), name='login'),
     path('logout/', OwnerLogoutView.as_view(), name='logout'),

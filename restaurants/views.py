@@ -508,26 +508,42 @@ class PlayStartView(View):
         table = self._table(qr_slug)
         if not table:
             return render(request, 'restaurants/play_invalid.html', status=404)
-        return render(request, 'games/identify.html', {'table': table, 'restaurant': table.branch.restaurant})
+        from customer.services.phones import SUPPORTED_PHONE_COUNTRIES, normalize_phone_country
+        restaurant = table.branch.restaurant
+        return render(request, 'games/identify.html', {
+            'table': table,
+            'restaurant': restaurant,
+            'phone_countries': SUPPORTED_PHONE_COUNTRIES,
+            'phone_country': normalize_phone_country(restaurant.country),
+        })
 
     def post(self, request, qr_slug):
         table = self._table(qr_slug)
         if not table:
             return render(request, 'restaurants/play_invalid.html', status=404)
         from customer.models import Customer
-        from games.services.gameplay import assign_daily_game, normalize_phone
+        from customer.services.phones import SUPPORTED_PHONE_COUNTRIES, normalize_phone, normalize_phone_country
+        restaurant = table.branch.restaurant
+        phone_country = normalize_phone_country(
+            request.POST.get('phone_country') or restaurant.country,
+        )
         try:
-            phone = normalize_phone(request.POST.get('phone_number'))
+            phone = normalize_phone(request.POST.get('phone_number'), phone_country)
         except ValueError as exc:
             return render(request, 'games/identify.html', {
-                'table': table, 'restaurant': table.branch.restaurant, 'error': str(exc),
+                'table': table, 'restaurant': restaurant, 'error': str(exc),
                 'full_name': request.POST.get('full_name', ''),
+                'phone_number': request.POST.get('phone_number', ''),
+                'phone_countries': SUPPORTED_PHONE_COUNTRIES,
+                'phone_country': phone_country,
             }, status=400)
         full_name = request.POST.get('full_name', '').strip()
         if not full_name:
             return render(request, 'games/identify.html', {
-                'table': table, 'restaurant': table.branch.restaurant,
-                'error': 'Please enter your name.', 'phone_number': phone,
+                'table': table, 'restaurant': restaurant,
+                'error': 'Please enter your name.', 'phone_number': request.POST.get('phone_number', ''),
+                'phone_countries': SUPPORTED_PHONE_COUNTRIES,
+                'phone_country': phone_country,
             }, status=400)
         customer, created = Customer.objects.get_or_create(
             phone_number=phone,
@@ -536,7 +552,8 @@ class PlayStartView(View):
         if not created and customer.full_name != full_name:
             customer.full_name = full_name
             customer.save(update_fields=['full_name', 'updated_at'])
-        gameplay, assigned = assign_daily_game(customer, table.branch.restaurant, table, request)
+        from games.services.gameplay import assign_daily_game
+        gameplay, assigned = assign_daily_game(customer, restaurant, table, request)
         play_session = request.session.get('play_session', {})
         play_session.update({'customer_id': customer.pk, 'gameplay_id': gameplay.pk})
         request.session['play_session'] = play_session

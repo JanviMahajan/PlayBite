@@ -1,5 +1,4 @@
 import random
-import re
 from datetime import timedelta
 
 from django.db import IntegrityError, transaction
@@ -7,6 +6,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from games.models import Game, Gameplay
+from customer.services.phones import normalize_phone
 
 
 ACTIVE_GAME_SLUGS = ('burger-stack', 'order-rush', 'memory-match', 'pizza-slice', 'tap-at-ten')
@@ -19,15 +19,6 @@ GAME_UI = {
     'pizza-slice': {'icon': '🍕', 'title': _('Perfect Slice!'), 'description': _('Time your taps and slice the pizza at just the right moment!'), 'steps': [_('Watch the moving cutter.'), _('Wait until it enters the green zone.'), _('Tap only inside the green zone—a miss ends the game.'), _('Complete three perfect cuts in time!')], 'cta': _('Slice It! 🍕')},
     'tap-at-ten': {'icon': '☕', 'title': _('Tap at 10 Seconds!'), 'description': _('Trust your inner clock and stop as close to 10 seconds as you can to win a free coffee!'), 'steps': [_('Press start and watch 1, 2, 3, GO!'), _('Wait for the STOP button to appear.'), _('Start counting only when you see STOP.'), _('Press STOP when your count reaches 10!')], 'cta': _('Start! ☕')},
 }
-
-
-def normalize_phone(value):
-    value = (value or '').strip()
-    prefix = '+' if value.startswith('+') else ''
-    digits = re.sub(r'\D', '', value)
-    if not 7 <= len(digits) <= 15:
-        raise ValueError('Enter a valid phone or WhatsApp number.')
-    return prefix + digits
 
 
 def gameplay_today(customer, restaurant, day=None):
