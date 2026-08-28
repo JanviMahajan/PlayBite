@@ -82,6 +82,19 @@ def reward_redemption_limits_allow_coupon(reward, at_date=None):
     return True
 
 
+def _replacement_reward_for_table(gameplay, table, exclude_id=None):
+    candidates = eligible_rewards_for_gameplay(gameplay).filter(
+        applicable_tables=table,
+    ).distinct()
+    if exclude_id:
+        candidates = candidates.exclude(pk=exclude_id)
+    available = [
+        reward for reward in candidates
+        if reward_redemption_limits_allow_coupon(reward, gameplay.play_date)
+    ]
+    return secrets.choice(available) if available else None
+
+
 @transaction.atomic
 def generate_coupon_for_gameplay(gameplay):
     """Create one coupon from the exact reward assigned to the scanned table."""
@@ -122,15 +135,11 @@ def generate_coupon_for_gameplay(gameplay):
     if not gameplay.assigned_reward_id:
         # The owner may configure a reward after today's gameplay was assigned.
         # Recover server-side so the consumed daily attempt can still earn it.
-        candidates = list(
-            eligible_rewards_for_gameplay(gameplay).filter(
-                applicable_tables=table,
-            ).distinct()
-        )
-        if not candidates:
+        replacement = _replacement_reward_for_table(gameplay, table)
+        if not replacement:
             logger.warning('No reward is configured for table %s (gameplay %s)', table.pk, gameplay.pk)
             return None
-        gameplay.assigned_reward = secrets.choice(candidates)
+        gameplay.assigned_reward = replacement
         gameplay.save(update_fields=['assigned_reward', 'updated_at'])
     reward = gameplay.assigned_reward
     if reward.restaurant_id != gameplay.restaurant_id:
@@ -139,19 +148,21 @@ def generate_coupon_for_gameplay(gameplay):
             gameplay.pk, reward.pk, reward.restaurant_id, gameplay.restaurant_id,
         )
         return None
-    if not reward.applicable_tables.filter(pk=table.pk).exists():
-        logger.error('Gameplay reward %s does not apply to table %s', reward.pk, table.pk)
-        return None
-    reward = eligible_rewards_for_gameplay(gameplay).filter(pk=reward.pk).first()
-    if reward is None:
+    reward_is_applicable = reward.applicable_tables.filter(pk=table.pk).exists()
+    reward_is_eligible = eligible_rewards_for_gameplay(gameplay).filter(pk=reward.pk).exists()
+    reward_limit_available = reward_redemption_limits_allow_coupon(reward, gameplay.play_date)
+    if not (reward_is_applicable and reward_is_eligible and reward_limit_available):
         logger.warning(
-            'Assigned reward %s is not eligible for gameplay %s on %s',
-            gameplay.assigned_reward_id, gameplay.pk, gameplay.play_date,
+            'Assigned reward %s is stale for gameplay %s (applicable=%s eligible=%s limit_available=%s)',
+            reward.pk, gameplay.pk, reward_is_applicable, reward_is_eligible,
+            reward_limit_available,
         )
-        return None
-    if not reward_redemption_limits_allow_coupon(reward, gameplay.play_date):
-        logger.warning('Assigned reward %s has reached a configured redemption limit', reward.pk)
-        return None
+        replacement = _replacement_reward_for_table(gameplay, table, exclude_id=reward.pk)
+        if not replacement:
+            return None
+        reward = replacement
+        gameplay.assigned_reward = reward
+        gameplay.save(update_fields=['assigned_reward', 'updated_at'])
 
     # create coupon
     coupon_code = _unique_code('PB', 6)

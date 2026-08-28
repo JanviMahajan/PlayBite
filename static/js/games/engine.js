@@ -80,6 +80,9 @@ export default class GameEngine {
     }
     this.sound('success'); this.confetti(); const coupon=result.coupon;
     if (!coupon) {
+      if (result.coupon_error === 'coupon_generation_failed') {
+        this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">📡</div><h1>${this.strings.couldNotStart}</h1><p>${this.strings.connection}</p><button class="pb-primary-button" onclick="location.reload()">${this.strings.refresh}</button></div>`; return;
+      }
       const message=result.coupon_error==='no_table_reward'?this.strings.noTableReward:'No active reward is available for this table. Please ask the restaurant team to activate it.';
       this.root.innerHTML=`<div class="pb-result"><div class="pb-game-hero">🎉</div><h1>Game complete!</h1><p>${message}</p><a class="pb-primary-button" href="/">Done</a></div>`; return;
     }

@@ -104,6 +104,7 @@ class GameSubmitView(View):
             except Exception:
                 logger.exception('Could not generate coupon for gameplay %s', gameplay.pk)
                 coupon = None
+                coupon_error = 'coupon_generation_failed'
             if coupon:
                 coupon_data = {
                     'id': coupon.pk,
@@ -122,11 +123,12 @@ class GameSubmitView(View):
                     coupon_error = 'coupon_url_unavailable'
             else:
                 gameplay.refresh_from_db(fields=['assigned_reward'])
-                coupon_error = (
-                    'no_table_reward'
-                    if not gameplay.restaurant_table_id or not gameplay.assigned_reward_id
-                    else 'no_active_reward'
-                )
+                if coupon_error is None:
+                    coupon_error = (
+                        'no_table_reward'
+                        if not gameplay.restaurant_table_id or not gameplay.assigned_reward_id
+                        else 'no_active_reward'
+                    )
         return JsonResponse({
             'ok': True,
             'won': gameplay.result == Gameplay.Result.WON,

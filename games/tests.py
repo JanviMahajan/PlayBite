@@ -142,6 +142,25 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(gameplay.assigned_reward,self.reward)
         self.assertEqual(coupon.reward,self.reward)
 
+    def test_stale_ineligible_reward_is_replaced_from_same_table(self):
+        tap_game=Game.objects.get(slug='tap-at-ten')
+        stale=Reward.objects.create(
+            restaurant=self.restaurant,title='Stale Coffee',is_active=True,
+            game_eligibility=Reward.GameEligibility.SPECIFIC,
+        )
+        stale.eligible_games.add(tap_game)
+        stale.applicable_tables.add(self.table)
+        gameplay=self.start(self.assign('memory-match'))
+        gameplay.assigned_reward=stale
+        gameplay.save(update_fields=['assigned_reward','updated_at'])
+        gameplay,_,_=submit_gameplay(
+            gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay),
+        )
+        coupon=generate_coupon_for_gameplay(gameplay)
+        gameplay.refresh_from_db()
+        self.assertEqual(gameplay.assigned_reward,self.reward)
+        self.assertEqual(coupon.reward,self.reward)
+
     def test_changing_table_reward_does_not_change_historical_coupon(self):
         original=Reward.objects.create(restaurant=self.restaurant,title='Original Table Reward')
         replacement=Reward.objects.create(restaurant=self.restaurant,title='Replacement Table Reward')
@@ -417,3 +436,23 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(response.status_code,200)
         self.assertIsNotNone(response.json()['coupon'])
         self.assertEqual(response.json()['coupon_error'],'coupon_url_unavailable')
+
+    @patch('games.views.generate_coupon_for_gameplay', side_effect=RuntimeError('database failed'))
+    def test_coupon_exception_is_not_masked_as_inactive_reward(self, _mock_generate):
+        gameplay=self.assign()
+        session=self.client.session
+        session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk,'table_id':self.table.pk}
+        session.save()
+        self.client.post(
+            reverse('games:game_start',args=[gameplay.game.slug]),data='{}',content_type='application/json',
+        )
+        gameplay.refresh_from_db()
+        response=self.client.post(
+            reverse('games:game_submit',args=[gameplay.game.slug]),
+            data=json.dumps({'outcome':'completed','evidence':self.winning_evidence(gameplay)}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code,200)
+        self.assertTrue(response.json()['won'])
+        self.assertIsNone(response.json()['coupon'])
+        self.assertEqual(response.json()['coupon_error'],'coupon_generation_failed')
