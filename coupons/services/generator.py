@@ -23,6 +23,24 @@ def _unique_code(prefix='PB', length=6):
             return code
 
 
+def _ensure_existing_coupon_is_deliverable(coupon, gameplay):
+    """Repair an idempotently reused coupon that predates delivery fields."""
+    update_fields = []
+    if not coupon.valid_from or not coupon.expiry_at:
+        coupon.set_validity_windows(gameplay.play_date)
+        update_fields.extend(['valid_from', 'expiry_at'])
+    if not coupon.qr_token:
+        coupon.qr_token = signing.dumps({
+            'coupon_code': coupon.coupon_code,
+            'nonce': secrets.token_urlsafe(16),
+        })
+        update_fields.append('qr_token')
+    if update_fields:
+        update_fields.append('updated_at')
+        coupon.save(update_fields=update_fields)
+    return coupon
+
+
 def eligible_rewards_for_restaurant(restaurant, at_date=None):
     """Return the single source of truth for currently available rewards."""
     at_date = at_date or timezone.localdate()
@@ -75,7 +93,14 @@ def generate_coupon_for_gameplay(gameplay):
     ).get(pk=gameplay.pk)
     existing = Coupon.objects.filter(gameplay=gameplay).first()
     if existing:
-        return existing
+        coupon = _ensure_existing_coupon_is_deliverable(existing, gameplay)
+        logger.info(
+            'COUPON FLOW reused gameplay=%s game=%s restaurant=%s table=%s reward=%s coupon=%s code=%s redirect_ready=%s',
+            gameplay.pk, gameplay.game_id, gameplay.restaurant_id,
+            gameplay.restaurant_table_id, coupon.reward_id, coupon.pk,
+            coupon.coupon_code, bool(coupon.qr_token),
+        )
+        return coupon
     if gameplay.result != Gameplay.Result.WON or not gameplay.completed:
         return None
     restaurant = gameplay.restaurant
@@ -147,5 +172,12 @@ def generate_coupon_for_gameplay(gameplay):
     token = signing.dumps(payload)
     coupon.qr_token = token
     coupon.save(update_fields=['valid_from', 'expiry_at', 'qr_token', 'updated_at'])
+
+    logger.info(
+        'COUPON FLOW created gameplay=%s game=%s restaurant=%s branch=%s table=%s result=%s reward=%s active=%s eligible=%s coupon=%s code=%s redirect_ready=%s',
+        gameplay.pk, gameplay.game_id, gameplay.restaurant_id, table.branch_id,
+        table.pk, gameplay.result, reward.pk, reward.is_active, True, coupon.pk,
+        coupon.coupon_code, bool(coupon.qr_token),
+    )
 
     return coupon

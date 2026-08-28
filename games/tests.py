@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from urllib.parse import urlparse
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -373,6 +374,39 @@ class GameplayFlowTests(TestCase):
         self.assertIn('/coupon/view/', result.json()['coupon']['view_url'])
         duplicate=self.client.post(reverse('games:game_submit',args=[gameplay.game.slug]),data=json.dumps(payload),content_type='application/json');self.assertEqual(duplicate.status_code,409)
         refreshed=self.client.get(reverse('games:game_play',args=[gameplay.game.slug]));self.assertContains(refreshed,'That’s all for today!')
+
+    def test_hidden_incomplete_coupon_is_reused_repaired_and_displayed(self):
+        gameplay=self.assign()
+        hidden=Coupon.objects.create(
+            customer=self.customer,restaurant=self.restaurant,branch=self.branch,
+            table=self.table,reward=self.reward,gameplay=gameplay,
+            status=Coupon.Status.PENDING,qr_token=None,valid_from=None,expiry_at=None,
+        )
+        session=self.client.session
+        session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk,'table_id':self.table.pk}
+        session.save()
+        self.client.post(
+            reverse('games:game_start',args=[gameplay.game.slug]),data='{}',content_type='application/json',
+        )
+        gameplay.refresh_from_db()
+        response=self.client.post(
+            reverse('games:game_submit',args=[gameplay.game.slug]),
+            data=json.dumps({'outcome':'completed','evidence':self.winning_evidence(gameplay)}),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code,200)
+        self.assertTrue(response.json()['won'])
+        self.assertEqual(Coupon.objects.filter(gameplay=gameplay).count(),1)
+        hidden.refresh_from_db()
+        self.assertTrue(hidden.qr_token)
+        self.assertEqual(
+            timezone.localtime(hidden.valid_from).date(),gameplay.play_date+timedelta(days=1),
+        )
+        view_url=response.json()['coupon']['view_url']
+        self.assertTrue(view_url)
+        coupon_page=self.client.get(urlparse(view_url).path)
+        self.assertEqual(coupon_page.status_code,200)
+        self.assertContains(coupon_page,self.reward.title)
 
     @patch('games.views.public_coupon_url', side_effect=RuntimeError('URL build failed'))
     def test_coupon_response_error_is_not_reported_as_missing_reward(self, _mock_url):
