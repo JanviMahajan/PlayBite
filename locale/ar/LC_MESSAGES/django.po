@@ -714,3 +714,33 @@ msgstr "تصبح القسيمة صالحة بدءًا من الغد"
 
 msgid "Redeem before it expires"
 msgstr "استخدمها قبل انتهاء صلاحيتها"
+
+msgid "Reward"
+msgstr "المكافأة"
+
+msgid "Edit Reward"
+msgstr "تعديل المكافأة"
+
+msgid "Assign Reward"
+msgstr "تعيين مكافأة"
+
+msgid "Not configured"
+msgstr "غير مُعدّة"
+
+msgid "Select Reward"
+msgstr "اختر المكافأة"
+
+msgid "Create New Reward"
+msgstr "إنشاء مكافأة جديدة"
+
+msgid "View QR"
+msgstr "عرض رمز QR"
+
+msgid "Edit Table"
+msgstr "تعديل الطاولة"
+
+msgid "No reward is configured for this table."
+msgstr "لم يتم إعداد مكافأة لهذه الطاولة."
+
+msgid "The selected reward must belong to the same restaurant as this table."
+msgstr "يجب أن تنتمي المكافأة المحددة إلى المطعم نفسه الذي تنتمي إليه هذه الطاولة."

@@ -3,6 +3,7 @@ from django.core.validators import RegexValidator
 from django.utils.translation import gettext_lazy as _
 
 from .models import Restaurant, Branch, RestaurantTable
+from coupons.models import Reward
 
 phone_validator = RegexValidator(r"^\+?[0-9\-\s]{7,20}$", _('Enter a valid phone number.'))
 
@@ -50,11 +51,23 @@ class BranchForm(forms.ModelForm):
 class TableForm(forms.ModelForm):
     class Meta:
         model = RestaurantTable
-        fields = ['branch', 'table_number', 'is_active']
+        fields = ['branch', 'table_number', 'reward', 'is_active']
         widgets = {
             'branch': forms.Select(attrs={'class': 'form-select'}),
             'table_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'reward': forms.Select(attrs={'class': 'form-select'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        restaurant = kwargs.pop('restaurant', None)
+        super().__init__(*args, **kwargs)
+        self.fields['branch'].queryset = Branch.objects.none()
+        self.fields['reward'].queryset = Reward.objects.none()
+        self.fields['reward'].required = False
+        self.fields['reward'].empty_label = _('Not configured')
+        if restaurant:
+            self.fields['branch'].queryset = Branch.objects.filter(restaurant=restaurant)
+            self.fields['reward'].queryset = Reward.objects.filter(restaurant=restaurant).order_by('title')
 
     def clean(self):
         cleaned = super().clean()

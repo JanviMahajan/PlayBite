@@ -194,7 +194,7 @@ class TableListView(LoginRequiredMixin, OwnerRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        qs = RestaurantTable.objects.filter(branch__restaurant__owner=self.request.user).select_related('branch').order_by('branch', 'table_number')
+        qs = RestaurantTable.objects.filter(branch__restaurant__owner=self.request.user).select_related('branch', 'reward').order_by('branch', 'table_number')
         q = self.request.GET.get('q')
         branch = self.request.GET.get('branch')
         status = self.request.GET.get('status')
@@ -220,11 +220,10 @@ class TableCreateView(LoginRequiredMixin, OwnerRequiredMixin, CreateView):
     template_name = 'restaurants/table_form.html'
     success_url = reverse_lazy('restaurants:table_list')
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        # limit branches to owner's branches
-        form.fields['branch'].queryset = Branch.objects.filter(restaurant__owner=self.request.user)
-        return form
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['restaurant'] = self.request.user.restaurant
+        return kwargs
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -245,10 +244,10 @@ class TableUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
     def get_queryset(self):
         return RestaurantTable.objects.filter(branch__restaurant__owner=self.request.user)
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.fields['branch'].queryset = Branch.objects.filter(restaurant__owner=self.request.user)
-        return form
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['restaurant'] = self.request.user.restaurant
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, 'Table updated successfully.')
@@ -454,11 +453,11 @@ class PlayWelcomeView(View):
 
 
 class PlayOffersView(View):
-    """Show active rewards for this restaurant."""
+    """Show the currently available reward assigned to this table."""
     def get(self, request, qr_slug):
         # validate session and qr
         try:
-            table = RestaurantTable.objects.select_related('branch__restaurant').get(qr_slug=qr_slug)
+            table = RestaurantTable.objects.select_related('branch__restaurant', 'reward').get(qr_slug=qr_slug)
         except RestaurantTable.DoesNotExist:
             return render(request, 'restaurants/play_invalid.html', status=404)
 
@@ -469,7 +468,7 @@ class PlayOffersView(View):
         # Use the same availability rules as coupon generation.
         try:
             from coupons.services.generator import eligible_rewards_for_restaurant
-            rewards = eligible_rewards_for_restaurant(restaurant)
+            rewards = eligible_rewards_for_restaurant(restaurant).filter(pk=table.reward_id)
         except Exception:
             rewards = []
 

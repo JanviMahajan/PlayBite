@@ -1,5 +1,5 @@
 {% extends 'base_clean.html' %}
-{% load static %}
+{% load static i18n %}
 {% block title %}Offers | {{ restaurant.restaurant_name }}{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'css/play.css' %}">{% endblock %}
 {% block content %}
@@ -28,7 +28,7 @@
       {% endfor %}
     </div>
   {% else %}
-    <div class="alert alert-info">No active offers at this time.</div>
+    <div class="alert alert-info">{% translate "No reward is configured for this table." %}</div>
   {% endif %}
 </div>
 {% endblock %}

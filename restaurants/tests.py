@@ -10,7 +10,7 @@ from customer.models import Customer
 from coupons.models import Reward
 from games.models import Gameplay
 from .models import Branch, Restaurant, RestaurantTable
-from .forms import BranchForm
+from .forms import BranchForm, TableForm
 
 
 class CustomerEntryTests(TestCase):
@@ -44,6 +44,7 @@ class CustomerEntryTests(TestCase):
 
     def test_public_offers_match_gameplay_reward_availability(self):
         current = Reward.objects.create(restaurant=self.restaurant, title='Current', is_active=True)
+        self.table.reward=current;self.table.save(update_fields=['reward','updated_at'])
         Reward.objects.create(
             restaurant=self.restaurant, title='Future', is_active=True,
             start_date=timezone.localdate() + timedelta(days=1),
@@ -76,6 +77,49 @@ class BranchFormTests(TestCase):
         form = BranchForm()
         self.assertNotIn('latitude', form.fields)
         self.assertNotIn('longitude', form.fields)
+
+
+class TableRewardOwnerTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.owner_a=get_user_model().objects.create_user('table-a@example.com',raw_password='x')
+        cls.owner_b=get_user_model().objects.create_user('table-b@example.com',raw_password='x')
+        cls.restaurant_a=Restaurant.objects.create(owner=cls.owner_a,restaurant_name='Table Cafe A')
+        cls.restaurant_b=Restaurant.objects.create(owner=cls.owner_b,restaurant_name='Table Cafe B')
+        cls.branch_a=Branch.objects.create(restaurant=cls.restaurant_a,branch_name='Main A')
+        cls.branch_b=Branch.objects.create(restaurant=cls.restaurant_b,branch_name='Main B')
+        cls.reward_a=Reward.objects.create(restaurant=cls.restaurant_a,title='A Reward')
+        cls.reward_b=Reward.objects.create(restaurant=cls.restaurant_b,title='B Reward')
+        with patch.object(RestaurantTable,'generate_qr_image'):
+            cls.table_a=RestaurantTable.objects.create(branch=cls.branch_a,table_number='A1',reward=cls.reward_a)
+            cls.table_b=RestaurantTable.objects.create(branch=cls.branch_b,table_number='B1',reward=cls.reward_b)
+            cls.table_unassigned=RestaurantTable.objects.create(branch=cls.branch_a,table_number='A2')
+
+    def test_table_form_only_lists_rewards_from_the_owner_restaurant(self):
+        form=TableForm(instance=self.table_a,restaurant=self.restaurant_a)
+        self.assertIn(self.reward_a,form.fields['reward'].queryset)
+        self.assertNotIn(self.reward_b,form.fields['reward'].queryset)
+
+    def test_cross_restaurant_reward_assignment_is_rejected(self):
+        form=TableForm(
+            instance=self.table_a,
+            restaurant=self.restaurant_a,
+            data={'branch':self.branch_a.pk,'table_number':'A1','reward':self.reward_b.pk,'is_active':True},
+        )
+        self.assertFalse(form.is_valid())
+        self.table_a.refresh_from_db()
+        self.assertEqual(self.table_a.reward,self.reward_a)
+
+    def test_owner_cannot_edit_another_owners_table(self):
+        self.client.force_login(self.owner_a)
+        response=self.client.get(reverse('restaurants:table_edit',args=[self.table_b.pk]))
+        self.assertEqual(response.status_code,404)
+
+    def test_table_list_displays_assigned_and_unconfigured_rewards(self):
+        self.client.force_login(self.owner_a)
+        response=self.client.get(reverse('restaurants:table_list'))
+        self.assertContains(response,'A Reward')
+        self.assertContains(response,'Not configured')
 
 
 class DashboardStatsTests(TestCase):

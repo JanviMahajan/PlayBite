@@ -43,10 +43,10 @@ def assign_daily_game(customer, restaurant, table, request):
     from coupons.services.generator import eligible_rewards_for_restaurant
     from coupons.models import Reward
 
-    rewards = eligible_rewards_for_restaurant(restaurant)
     games_qs = Game.objects.filter(slug__in=ACTIVE_GAME_SLUGS, is_active=True)
-    if not rewards.filter(game_eligibility=Reward.GameEligibility.ALL).exists():
-        games_qs = games_qs.filter(eligible_rewards__in=rewards).distinct()
+    table_reward = eligible_rewards_for_restaurant(restaurant).filter(pk=table.reward_id).first()
+    if table_reward and table_reward.game_eligibility == Reward.GameEligibility.SPECIFIC:
+        games_qs = games_qs.filter(pk__in=table_reward.eligible_games.values('pk'))
     games = list(games_qs)
     if not games:
         raise Game.DoesNotExist('No PlayBite games are active.')

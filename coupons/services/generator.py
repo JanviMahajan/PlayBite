@@ -46,11 +46,27 @@ def eligible_rewards_for_gameplay(gameplay, at_date=None):
     ).distinct()
 
 
+def reward_redemption_limits_allow_coupon(reward, at_date=None):
+    """Honor existing reward redemption caps before issuing another coupon."""
+    from coupons.models import Redemption
+
+    redemptions = Redemption.objects.filter(
+        coupon__reward=reward,
+        redeemed_at__isnull=False,
+    )
+    if reward.max_total_redemptions is not None:
+        if redemptions.count() >= reward.max_total_redemptions:
+            return False
+    if reward.max_daily_redemptions is not None:
+        at_date = at_date or timezone.localdate()
+        if redemptions.filter(redeemed_at__date=at_date).count() >= reward.max_daily_redemptions:
+            return False
+    return True
+
+
 @transaction.atomic
 def generate_coupon_for_gameplay(gameplay):
-    """Determine eligible rewards for the gameplay, pick the highest value one, create Coupon.
-    Returns coupon instance or None if none available.
-    """
+    """Create one coupon from the exact reward assigned to the scanned table."""
     from games.models import Gameplay
     # Lock only the non-null Gameplay row. PostgreSQL rejects FOR UPDATE when
     # the same query outer-joins the nullable restaurant_table relationship.
@@ -63,13 +79,14 @@ def generate_coupon_for_gameplay(gameplay):
     if gameplay.result != Gameplay.Result.WON or not gameplay.completed:
         return None
     restaurant = gameplay.restaurant
-    table = None
-    if gameplay.restaurant_table_id:
-        from restaurants.models import RestaurantTable
-        table = RestaurantTable.objects.select_related('branch').get(
-            pk=gameplay.restaurant_table_id
-        )
-    if table and table.branch.restaurant_id != gameplay.restaurant_id:
+    if not gameplay.restaurant_table_id:
+        logger.warning('No table is associated with gameplay %s', gameplay.pk)
+        return None
+    from restaurants.models import RestaurantTable
+    table = RestaurantTable.objects.select_for_update().select_related('branch', 'reward').get(
+        pk=gameplay.restaurant_table_id
+    )
+    if table.branch.restaurant_id != gameplay.restaurant_id:
         logger.error(
             'Gameplay %s restaurant %s does not match table restaurant %s',
             gameplay.pk,
@@ -77,25 +94,24 @@ def generate_coupon_for_gameplay(gameplay):
             table.branch.restaurant_id,
         )
         return None
-
-    rewards = eligible_rewards_for_gameplay(gameplay)
-    best = rewards.filter(
-        game_eligibility=Reward.GameEligibility.SPECIFIC,
-        eligible_games=gameplay.game,
-    ).order_by('-created_at', '-pk').first()
-    if best is None:
-        best = rewards.filter(
-            game_eligibility=Reward.GameEligibility.ALL,
-        ).order_by('-created_at', '-pk').first()
-    if best is None:
-        logger.warning(
-            'No eligible reward for gameplay %s restaurant %s; active=%s eligible=%s play_date=%s',
-            gameplay.pk,
-            gameplay.restaurant_id,
-            Reward.objects.filter(restaurant_id=gameplay.restaurant_id, is_active=True).count(),
-            rewards.count(),
-            gameplay.play_date,
+    if not table.reward_id:
+        logger.warning('No reward is configured for table %s (gameplay %s)', table.pk, gameplay.pk)
+        return None
+    if table.reward.restaurant_id != gameplay.restaurant_id:
+        logger.error(
+            'Table %s reward %s belongs to restaurant %s, not gameplay restaurant %s',
+            table.pk, table.reward_id, table.reward.restaurant_id, gameplay.restaurant_id,
         )
+        return None
+    reward = eligible_rewards_for_gameplay(gameplay).filter(pk=table.reward_id).first()
+    if reward is None:
+        logger.warning(
+            'Table reward %s is not eligible for gameplay %s on %s',
+            table.reward_id, gameplay.pk, gameplay.play_date,
+        )
+        return None
+    if not reward_redemption_limits_allow_coupon(reward, gameplay.play_date):
+        logger.warning('Table reward %s has reached a configured redemption limit', reward.pk)
         return None
 
     # create coupon
@@ -106,7 +122,7 @@ def generate_coupon_for_gameplay(gameplay):
         restaurant=restaurant,
         branch=table.branch if table else None,
         table=table,
-        reward=best,
+        reward=reward,
         gameplay=gameplay,
         coupon_code=coupon_code,
         status=Coupon.Status.PENDING,

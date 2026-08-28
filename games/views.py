@@ -21,7 +21,7 @@ def _session_gameplay(request, slug=None):
     if not gameplay_id or not customer_id:
         raise Http404('Game session not found.')
     queryset = Gameplay.objects.select_related(
-        'game', 'restaurant', 'restaurant_table__branch', 'customer'
+        'game', 'restaurant', 'restaurant_table__branch', 'restaurant_table__reward', 'customer'
     )
     filters = {'pk': gameplay_id, 'customer_id': customer_id}
     if slug:
@@ -119,7 +119,11 @@ class GameSubmitView(View):
                     logger.exception('Could not build coupon response for gameplay %s', gameplay.pk)
                     coupon_error = 'coupon_url_unavailable'
             else:
-                coupon_error = 'no_active_reward'
+                coupon_error = (
+                    'no_table_reward'
+                    if not gameplay.restaurant_table_id or not gameplay.restaurant_table.reward_id
+                    else 'no_active_reward'
+                )
         return JsonResponse({
             'ok': True,
             'won': gameplay.result == Gameplay.Result.WON,
