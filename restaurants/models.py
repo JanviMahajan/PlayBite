@@ -1,7 +1,6 @@
 import uuid
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Count
 from django.utils.translation import gettext_lazy as _
@@ -98,15 +97,6 @@ class RestaurantTable(TimeStampedModel):
     qr_slug = models.UUIDField(_('QR slug'), default=uuid.uuid4, editable=False, unique=True)
     qr_image = models.ImageField(_('QR image'), upload_to='table_qr_codes/', null=True, blank=True)
     is_active = models.BooleanField(_('active'), default=True)
-    reward = models.ForeignKey(
-        'coupons.Reward',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='assigned_tables',
-        verbose_name=_('reward'),
-    )
-
     class Meta:
         verbose_name = _('table')
         verbose_name_plural = _('tables')
@@ -119,15 +109,6 @@ class RestaurantTable(TimeStampedModel):
 
     def __str__(self):
         return f'Table {self.table_number} @ {self.branch.branch_name}'
-
-    def clean(self):
-        super().clean()
-        if self.reward_id and self.branch_id:
-            restaurant_id = self.branch.restaurant_id
-            if self.reward.restaurant_id != restaurant_id:
-                raise ValidationError({
-                    'reward': _('The selected reward must belong to the same restaurant as this table.'),
-                })
 
     def get_qr_url(self):
         # Returns the play URL for this table's qr

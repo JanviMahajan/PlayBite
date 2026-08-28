@@ -3,7 +3,6 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, View
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Count
 
 from accounts.views import OwnerRequiredMixin
 from .models import Reward, Coupon
@@ -17,9 +16,9 @@ class RewardListView(LoginRequiredMixin, OwnerRequiredMixin, ListView):
     paginate_by = 12
 
     def get_queryset(self):
-        qs = Reward.objects.filter(restaurant__owner=self.request.user).annotate(
-            assigned_table_count=Count('assigned_tables'),
-        ).prefetch_related('eligible_games').order_by('-created_at')
+        qs = Reward.objects.filter(restaurant__owner=self.request.user).prefetch_related(
+            'eligible_games', 'applicable_tables__branch',
+        ).order_by('-created_at')
         q = self.request.GET.get('q')
         if q:
             qs = qs.filter(title__icontains=q)
@@ -35,15 +34,7 @@ class RewardCreateView(LoginRequiredMixin, OwnerRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.restaurant = get_object_or_404(self.request.user.restaurant.__class__, owner=self.request.user)
         response = super().form_valid(form)
-        from coupons.services.assignments import assign_reward_to_unconfigured_tables
-        assigned_count = assign_reward_to_unconfigured_tables(self.object)
-        if assigned_count:
-            messages.success(
-                self.request,
-                f'Reward created and assigned to {assigned_count} unconfigured table(s).',
-            )
-        else:
-            messages.success(self.request, 'Reward created.')
+        messages.success(self.request, 'Reward created.')
         return response
 
     def get_form_kwargs(self):
@@ -60,6 +51,11 @@ class RewardUpdateView(LoginRequiredMixin, OwnerRequiredMixin, UpdateView):
 
     def get_queryset(self):
         return Reward.objects.filter(restaurant__owner=self.request.user)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['restaurant'] = getattr(self.request.user, 'restaurant', None)
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, 'Reward updated.')

@@ -2,6 +2,7 @@ import random
 from datetime import timedelta
 
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -35,9 +36,16 @@ def assign_daily_game(customer, restaurant, table, request):
     from coupons.models import Reward
 
     games_qs = Game.objects.filter(slug__in=ACTIVE_GAME_SLUGS, is_active=True)
-    table_reward = eligible_rewards_for_restaurant(restaurant).filter(pk=table.reward_id).first()
-    if table_reward and table_reward.game_eligibility == Reward.GameEligibility.SPECIFIC:
-        games_qs = games_qs.filter(pk__in=table_reward.eligible_games.values('pk'))
+    reward_candidates = eligible_rewards_for_restaurant(restaurant).filter(
+        applicable_tables=table,
+    ).filter(
+        Q(game_eligibility=Reward.GameEligibility.ALL)
+        | Q(game_eligibility=Reward.GameEligibility.SPECIFIC, eligible_games__in=games_qs)
+    ).distinct()
+    rewards = list(reward_candidates)
+    assigned_reward = random.SystemRandom().choice(rewards) if rewards else None
+    if assigned_reward and assigned_reward.game_eligibility == Reward.GameEligibility.SPECIFIC:
+        games_qs = games_qs.filter(pk__in=assigned_reward.eligible_games.values('pk'))
     games = list(games_qs)
     if not games:
         raise Game.DoesNotExist('No PlayBite games are active.')
@@ -47,6 +55,7 @@ def assign_daily_game(customer, restaurant, table, request):
             customer=customer,
             restaurant=restaurant,
             restaurant_table=table,
+            assigned_reward=assigned_reward,
             game=game,
             play_date=timezone.localdate(),
             ip_address=request.META.get('REMOTE_ADDR'),

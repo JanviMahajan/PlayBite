@@ -28,9 +28,7 @@ class GameplayFlowTests(TestCase):
             cls.table = RestaurantTable.objects.create(branch=cls.branch, table_number='1')
             cls.table2 = RestaurantTable.objects.create(branch=cls.branch, table_number='2')
         cls.reward = Reward.objects.create(restaurant=cls.restaurant, title='Free Cookie', reward_type=Reward.RewardType.FREE_ITEM, coupon_valid_days=3)
-        RestaurantTable.objects.filter(pk__in=[cls.table.pk, cls.table2.pk]).update(reward=cls.reward)
-        cls.table.reward = cls.reward
-        cls.table2.reward = cls.reward
+        cls.reward.applicable_tables.add(cls.table, cls.table2)
 
     def setUp(self):
         self.table.refresh_from_db()
@@ -102,8 +100,9 @@ class GameplayFlowTests(TestCase):
     def test_each_table_win_uses_its_exact_assigned_reward(self):
         five=Reward.objects.create(restaurant=self.restaurant,title='5% Discount')
         ten=Reward.objects.create(restaurant=self.restaurant,title='10% Discount')
-        self.table.reward=five;self.table.save(update_fields=['reward','updated_at'])
-        self.table2.reward=ten;self.table2.save(update_fields=['reward','updated_at'])
+        self.reward.applicable_tables.clear()
+        five.applicable_tables.add(self.table)
+        ten.applicable_tables.add(self.table2)
         second=Customer.objects.create(full_name='B',phone_number='+919123450777')
         _,first_coupon=self.win_at_table(self.table,self.customer)
         _,second_coupon=self.win_at_table(self.table2,second)
@@ -111,7 +110,7 @@ class GameplayFlowTests(TestCase):
         self.assertEqual(second_coupon.reward,ten)
 
     def test_table_without_reward_creates_no_coupon_and_reports_friendly_reason(self):
-        self.table.reward=None;self.table.save(update_fields=['reward','updated_at'])
+        self.reward.applicable_tables.remove(self.table)
         gameplay=self.assign()
         session=self.client.session
         session['play_session']={'customer_id':self.customer.pk,'gameplay_id':gameplay.pk,'table_id':self.table.pk}
@@ -131,20 +130,22 @@ class GameplayFlowTests(TestCase):
     def test_changing_table_reward_does_not_change_historical_coupon(self):
         original=Reward.objects.create(restaurant=self.restaurant,title='Original Table Reward')
         replacement=Reward.objects.create(restaurant=self.restaurant,title='Replacement Table Reward')
-        self.table.reward=original;self.table.save(update_fields=['reward','updated_at'])
+        self.reward.applicable_tables.remove(self.table)
+        original.applicable_tables.add(self.table)
         _,coupon=self.win_at_table(self.table,self.customer)
-        self.table.reward=replacement;self.table.save(update_fields=['reward','updated_at'])
+        original.applicable_tables.remove(self.table)
+        replacement.applicable_tables.add(self.table)
         coupon.refresh_from_db()
         self.assertEqual(coupon.reward,original)
 
     def test_shared_reward_assignments_remain_independent(self):
         shared=Reward.objects.create(restaurant=self.restaurant,title='Shared Reward')
         replacement=Reward.objects.create(restaurant=self.restaurant,title='Table One Reward')
-        RestaurantTable.objects.filter(pk__in=[self.table.pk,self.table2.pk]).update(reward=shared)
-        self.table.reward=replacement;self.table.save(update_fields=['reward','updated_at'])
-        self.table2.refresh_from_db()
-        self.assertEqual(self.table.reward,replacement)
-        self.assertEqual(self.table2.reward,shared)
+        shared.applicable_tables.add(self.table, self.table2)
+        shared.applicable_tables.remove(self.table)
+        replacement.applicable_tables.add(self.table)
+        self.assertEqual(list(replacement.applicable_tables.all()), [self.table])
+        self.assertEqual(list(shared.applicable_tables.all()), [self.table2])
 
     def test_reward_dates_are_inclusive_and_coupon_window_starts_tomorrow(self):
         self.reward.start_date=timezone.localdate();self.reward.end_date=timezone.localdate();self.reward.coupon_valid_days=7;self.reward.save()
@@ -166,7 +167,7 @@ class GameplayFlowTests(TestCase):
         owner=get_user_model().objects.create_user('reward-owner@example.com',raw_password='x',full_name='Reward Owner')
         other=Restaurant.objects.create(owner=owner,restaurant_name='Reward Cafe')
         wrong=Reward.objects.create(restaurant=other,title='Wrong Restaurant Reward',is_active=True)
-        RestaurantTable.objects.filter(pk=self.table.pk).update(reward=wrong)
+        gameplay.assigned_reward=wrong;gameplay.save(update_fields=['assigned_reward','updated_at'])
         gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,self.winning_evidence(gameplay))
         self.assertIsNone(generate_coupon_for_gameplay(gameplay))
 
@@ -313,7 +314,8 @@ class GameplayFlowTests(TestCase):
 
     def test_tap_at_ten_awards_game_specific_free_coffee(self):
         coffee=self.restaurant.rewards.get(title='Free Coffee')
-        self.table.reward=coffee;self.table.save(update_fields=['reward','updated_at'])
+        self.reward.applicable_tables.remove(self.table)
+        coffee.applicable_tables.add(self.table)
         gameplay=self.start(self.assign('tap-at-ten'))
         now=timezone.now();Gameplay.objects.filter(pk=gameplay.pk).update(started_at=now-timedelta(seconds=10),deadline=now+timedelta(seconds=5));gameplay.refresh_from_db()
         gameplay,_,_=submit_gameplay(gameplay.pk,self.customer.pk,True,{'tap_ms':10000})
@@ -329,7 +331,8 @@ class GameplayFlowTests(TestCase):
             game_eligibility=Reward.GameEligibility.SPECIFIC,
         )
         reward.eligible_games.add(order_game)
-        self.table.reward=reward;self.table.save(update_fields=['reward','updated_at'])
+        self.reward.applicable_tables.remove(self.table)
+        reward.applicable_tables.add(self.table)
         Game.objects.filter(slug__in=ACTIVE_GAME_SLUGS).update(is_active=True)
         gameplay,created=assign_daily_game(self.customer,self.restaurant,self.table,self.request)
         self.assertTrue(created);self.assertEqual(gameplay.game.slug,'order-rush')

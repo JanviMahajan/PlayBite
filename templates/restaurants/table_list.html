@@ -42,7 +42,6 @@
                 <th>Branch</th>
                 <th>Table Number</th>
                 <th>Status</th>
-                <th>{% translate "Reward" %}</th>
                 <th>QR</th>
                 <th></th>
               </tr>
@@ -53,12 +52,10 @@
                   <td>{{ t.branch.branch_name }}</td>
                   <td>{{ t.table_number }}</td>
                   <td>{% if t.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
-                  <td>{% if t.reward %}{{ t.reward.title }}{% else %}<span class="text-body-secondary">{% translate "Not configured" %}</span>{% endif %}</td>
                   <td>{% if t.qr_image %}<span class="badge bg-success">Ready</span>{% else %}<span class="badge bg-secondary">Pending</span>{% endif %}</td>
                   <td class="text-end">
                     <a href="{% url 'restaurants:qr_detail' t.pk %}" class="btn btn-sm btn-outline-secondary me-1">{% translate "View QR" %}</a>
                     <a href="{% url 'restaurants:table_edit' t.pk %}" class="btn btn-sm btn-outline-secondary me-1">{% translate "Edit Table" %}</a>
-                    <a href="{% url 'restaurants:table_edit' t.pk %}#id_reward" class="btn btn-sm btn-outline-warning me-1">{% if t.reward %}{% translate "Edit Reward" %}{% else %}{% translate "Assign Reward" %}{% endif %}</a>
                     <form method="post" action="{% url 'restaurants:table_delete' t.pk %}" class="d-inline" onsubmit="return confirm('Delete this table?');">{% csrf_token %}<button class="btn btn-sm btn-danger">Delete</button></form>
                   </td>
                 </tr>

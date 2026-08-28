@@ -42,6 +42,12 @@ class Reward(TimeStampedModel):
 
     game_eligibility = models.CharField(_('game eligibility'), max_length=16, choices=GameEligibility.choices, default=GameEligibility.ALL)
     eligible_games = models.ManyToManyField('games.Game', blank=True, related_name='eligible_rewards')
+    applicable_tables = models.ManyToManyField(
+        'restaurants.RestaurantTable',
+        blank=True,
+        related_name='applicable_rewards',
+        verbose_name=_('applicable tables'),
+    )
 
     start_date = models.DateField(_('start date'), null=True, blank=True)
     end_date = models.DateField(_('end date'), null=True, blank=True)

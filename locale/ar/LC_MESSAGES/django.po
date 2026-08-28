@@ -823,3 +823,15 @@ msgstr "تعديل المكافأة"
 
 msgid "Assign Reward"
 msgstr "تعيين مكافأة"
+
+msgid "Applicable Tables"
+msgstr "الجداول المطبّق عليها"
+
+msgid "Select one or more tables where customers can win this reward."
+msgstr "اختر جدولًا واحدًا أو أكثر حيث يمكن للعملاء ربح هذه المكافأة."
+
+msgid "No tables selected"
+msgstr "لم يتم اختيار جداول"
+
+msgid "Select tables"
+msgstr "اختيار الجداول"

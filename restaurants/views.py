@@ -194,7 +194,7 @@ class TableListView(LoginRequiredMixin, OwnerRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        qs = RestaurantTable.objects.filter(branch__restaurant__owner=self.request.user).select_related('branch', 'reward').order_by('branch', 'table_number')
+        qs = RestaurantTable.objects.filter(branch__restaurant__owner=self.request.user).select_related('branch').order_by('branch', 'table_number')
         q = self.request.GET.get('q')
         branch = self.request.GET.get('branch')
         status = self.request.GET.get('status')
@@ -457,7 +457,7 @@ class PlayOffersView(View):
     def get(self, request, qr_slug):
         # validate session and qr
         try:
-            table = RestaurantTable.objects.select_related('branch__restaurant', 'reward').get(qr_slug=qr_slug)
+            table = RestaurantTable.objects.select_related('branch__restaurant').get(qr_slug=qr_slug)
         except RestaurantTable.DoesNotExist:
             return render(request, 'restaurants/play_invalid.html', status=404)
 
@@ -468,7 +468,7 @@ class PlayOffersView(View):
         # Use the same availability rules as coupon generation.
         try:
             from coupons.services.generator import eligible_rewards_for_restaurant
-            rewards = eligible_rewards_for_restaurant(restaurant).filter(pk=table.reward_id)
+            rewards = eligible_rewards_for_restaurant(restaurant).filter(applicable_tables=table).distinct()
         except Exception:
             rewards = []
 

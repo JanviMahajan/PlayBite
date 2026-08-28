@@ -9,6 +9,7 @@ from datetime import timedelta
 
 from customer.models import Customer
 from coupons.models import Reward
+from coupons.forms import RewardForm
 from games.models import Gameplay
 from .models import Branch, Restaurant, RestaurantTable
 from .forms import BranchForm, RestaurantProfileForm, TableForm
@@ -114,7 +115,7 @@ class CustomerEntryTests(TestCase):
 
     def test_public_offers_match_gameplay_reward_availability(self):
         current = Reward.objects.create(restaurant=self.restaurant, title='Current', is_active=True)
-        self.table.reward=current;self.table.save(update_fields=['reward','updated_at'])
+        current.applicable_tables.add(self.table)
         Reward.objects.create(
             restaurant=self.restaurant, title='Future', is_active=True,
             start_date=timezone.localdate() + timedelta(days=1),
@@ -153,7 +154,7 @@ class BranchFormTests(TestCase):
         self.assertEqual(set(choices),{'IN','AE'})
 
 
-class TableRewardOwnerTests(TestCase):
+class RewardApplicableTableOwnerTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.owner_a=get_user_model().objects.create_user('table-a@example.com',raw_password='x')
@@ -165,35 +166,44 @@ class TableRewardOwnerTests(TestCase):
         cls.reward_a=Reward.objects.create(restaurant=cls.restaurant_a,title='A Reward')
         cls.reward_b=Reward.objects.create(restaurant=cls.restaurant_b,title='B Reward')
         with patch.object(RestaurantTable,'generate_qr_image'):
-            cls.table_a=RestaurantTable.objects.create(branch=cls.branch_a,table_number='A1',reward=cls.reward_a)
-            cls.table_b=RestaurantTable.objects.create(branch=cls.branch_b,table_number='B1',reward=cls.reward_b)
+            cls.table_a=RestaurantTable.objects.create(branch=cls.branch_a,table_number='A1')
+            cls.table_b=RestaurantTable.objects.create(branch=cls.branch_b,table_number='B1')
             cls.table_unassigned=RestaurantTable.objects.create(branch=cls.branch_a,table_number='A2')
+        cls.reward_a.applicable_tables.add(cls.table_a, cls.table_unassigned)
+        cls.reward_b.applicable_tables.add(cls.table_b)
 
-    def test_table_form_only_lists_rewards_from_the_owner_restaurant(self):
+    def test_table_form_has_no_reward_configuration(self):
         form=TableForm(instance=self.table_a,restaurant=self.restaurant_a)
-        self.assertIn(self.reward_a,form.fields['reward'].queryset)
-        self.assertNotIn(self.reward_b,form.fields['reward'].queryset)
+        self.assertNotIn('reward',form.fields)
 
-    def test_cross_restaurant_reward_assignment_is_rejected(self):
-        form=TableForm(
-            instance=self.table_a,
+    def test_reward_form_only_lists_tables_from_owner_restaurant(self):
+        form=RewardForm(instance=self.reward_a, restaurant=self.restaurant_a)
+        self.assertIn(self.table_a,form.fields['applicable_tables'].queryset)
+        self.assertNotIn(self.table_b,form.fields['applicable_tables'].queryset)
+
+    def test_cross_restaurant_applicable_table_is_rejected(self):
+        form=RewardForm(
+            instance=self.reward_a,
             restaurant=self.restaurant_a,
-            data={'branch':self.branch_a.pk,'table_number':'A1','reward':self.reward_b.pk,'is_active':True},
+            data={
+                'title':'A Reward','description':'','reward_type':Reward.RewardType.FREE_ITEM,
+                'coupon_valid_days':7,'is_active':True,'applicable_tables':[self.table_b.pk],
+            },
         )
         self.assertFalse(form.is_valid())
-        self.table_a.refresh_from_db()
-        self.assertEqual(self.table_a.reward,self.reward_a)
+        self.assertIn('applicable_tables',form.errors)
 
     def test_owner_cannot_edit_another_owners_table(self):
         self.client.force_login(self.owner_a)
         response=self.client.get(reverse('restaurants:table_edit',args=[self.table_b.pk]))
         self.assertEqual(response.status_code,404)
 
-    def test_table_list_displays_assigned_and_unconfigured_rewards(self):
+    def test_table_list_contains_no_reward_configuration(self):
         self.client.force_login(self.owner_a)
         response=self.client.get(reverse('restaurants:table_list'))
-        self.assertContains(response,'A Reward')
-        self.assertContains(response,'Not configured')
+        self.assertNotContains(response,'A Reward')
+        self.assertNotContains(response,'Assign Reward')
+        self.assertNotContains(response,'Edit Reward')
 
 
 class DashboardStatsTests(TestCase):

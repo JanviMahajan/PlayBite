@@ -25,6 +25,7 @@ class RewardFormTests(SimpleTestCase):
         self.assertIn('end_date', fields)
         self.assertNotIn('game_eligibility', fields)
         self.assertIn('eligible_games', fields)
+        self.assertIn('applicable_tables', fields)
         self.assertNotIn('max_daily_redemptions', fields)
         self.assertNotIn('max_total_redemptions', fields)
         self.assertIn('is_active', fields)
@@ -152,14 +153,11 @@ class CustomerCouponTests(TestCase):
         reward = form.save(commit=False)
         self.assertEqual(reward.game_eligibility, Reward.GameEligibility.ALL)
 
-    def test_new_all_game_reward_fills_only_unconfigured_tables(self):
+    def test_owner_selects_multiple_applicable_tables_on_reward(self):
         branch = Branch.objects.create(restaurant=self.restaurant, branch_name='Main')
-        existing = Reward.objects.create(restaurant=self.restaurant, title='Existing')
         with patch.object(RestaurantTable, 'generate_qr_image'):
-            configured = RestaurantTable.objects.create(
-                branch=branch, table_number='1', reward=existing,
-            )
-            unconfigured = RestaurantTable.objects.create(branch=branch, table_number='2')
+            table_one = RestaurantTable.objects.create(branch=branch, table_number='1')
+            table_two = RestaurantTable.objects.create(branch=branch, table_number='2')
 
         self.client.force_login(self.owner)
         response = self.client.post(reverse('coupons:reward_create'), {
@@ -168,17 +166,20 @@ class CustomerCouponTests(TestCase):
             'reward_type': Reward.RewardType.FREE_ITEM,
             'coupon_valid_days': 7,
             'is_active': True,
+            'applicable_tables': [table_one.pk, table_two.pk],
         })
 
         self.assertRedirects(response, reverse('coupons:reward_list'))
         created = Reward.objects.get(title='Visible Treat')
-        configured.refresh_from_db()
-        unconfigured.refresh_from_db()
-        self.assertEqual(configured.reward, existing)
-        self.assertEqual(unconfigured.reward, created)
+        self.assertEqual(
+            set(created.applicable_tables.values_list('pk', flat=True)),
+            {table_one.pk, table_two.pk},
+        )
 
         list_response = self.client.get(reverse('coupons:reward_list'))
-        self.assertContains(list_response, 'Assigned to 1 table')
+        self.assertContains(list_response, 'Applicable Tables')
+        self.assertContains(list_response, 'Table 1')
+        self.assertContains(list_response, 'Table 2')
 
     def test_manual_redemption_redirects_to_staff_result(self):
         branch = Branch.objects.create(

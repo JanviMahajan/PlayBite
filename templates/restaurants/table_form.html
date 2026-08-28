@@ -15,7 +15,6 @@
                 <label class="form-label">{{ field.label }}</label>
                 {{ field }}
                 {% for err in field.errors %}<div class="form-text text-danger">{{ err }}</div>{% endfor %}
-                {% if field.name == 'reward' %}<div class="form-text"><a href="{% url 'coupons:reward_create' %}">{% translate "Create New Reward" %}</a></div>{% endif %}
               </div>
             {% endfor %}
             <button class="btn btn-warning text-white">Save</button>

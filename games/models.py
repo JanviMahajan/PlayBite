@@ -67,6 +67,14 @@ class Gameplay(TimeStampedModel):
         related_name='gameplays',
         verbose_name=_('restaurant table'),
     )
+    assigned_reward = models.ForeignKey(
+        'coupons.Reward',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_gameplays',
+        verbose_name=_('assigned reward'),
+    )
     game = models.ForeignKey(
         Game,
         on_delete=models.CASCADE,

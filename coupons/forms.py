@@ -1,4 +1,5 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from .models import Reward
 
 
@@ -7,12 +8,13 @@ class RewardForm(forms.ModelForm):
         model = Reward
         fields = [
             'title', 'description', 'reward_type', 'start_date', 'end_date',
-            'coupon_valid_days', 'eligible_games', 'is_active',
+            'coupon_valid_days', 'eligible_games', 'applicable_tables', 'is_active',
         ]
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
             'eligible_games': forms.CheckboxSelectMultiple(),
+            'applicable_tables': forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -27,6 +29,14 @@ class RewardForm(forms.ModelForm):
         self.fields['eligible_games'].required = False
         self.fields['eligible_games'].label = 'Eligible games'
         self.fields['eligible_games'].help_text = 'Leave every game unchecked to make this reward available for all games.'
+        self.fields['applicable_tables'].required = False
+        self.fields['applicable_tables'].label = _('Applicable Tables')
+        self.fields['applicable_tables'].help_text = _('Select one or more tables where customers can win this reward.')
+        self.fields['applicable_tables'].queryset = self.fields['applicable_tables'].queryset.none()
+        if restaurant:
+            self.fields['applicable_tables'].queryset = self.fields['applicable_tables'].queryset.model.objects.filter(
+                branch__restaurant=restaurant,
+            ).select_related('branch').order_by('branch__branch_name', 'table_number')
         if self.instance.pk and self.instance.game_eligibility == Reward.GameEligibility.ALL:
             self.initial['eligible_games'] = []
 

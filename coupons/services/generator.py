@@ -71,7 +71,7 @@ def generate_coupon_for_gameplay(gameplay):
     # Lock only the non-null Gameplay row. PostgreSQL rejects FOR UPDATE when
     # the same query outer-joins the nullable restaurant_table relationship.
     gameplay = Gameplay.objects.select_for_update().select_related(
-        'restaurant', 'game', 'customer'
+        'restaurant', 'game', 'customer', 'assigned_reward'
     ).get(pk=gameplay.pk)
     existing = Coupon.objects.filter(gameplay=gameplay).first()
     if existing:
@@ -83,7 +83,7 @@ def generate_coupon_for_gameplay(gameplay):
         logger.warning('No table is associated with gameplay %s', gameplay.pk)
         return None
     from restaurants.models import RestaurantTable
-    table = RestaurantTable.objects.select_for_update().select_related('branch', 'reward').get(
+    table = RestaurantTable.objects.select_for_update().select_related('branch').get(
         pk=gameplay.restaurant_table_id
     )
     if table.branch.restaurant_id != gameplay.restaurant_id:
@@ -94,24 +94,28 @@ def generate_coupon_for_gameplay(gameplay):
             table.branch.restaurant_id,
         )
         return None
-    if not table.reward_id:
+    if not gameplay.assigned_reward_id:
         logger.warning('No reward is configured for table %s (gameplay %s)', table.pk, gameplay.pk)
         return None
-    if table.reward.restaurant_id != gameplay.restaurant_id:
+    reward = gameplay.assigned_reward
+    if reward.restaurant_id != gameplay.restaurant_id:
         logger.error(
-            'Table %s reward %s belongs to restaurant %s, not gameplay restaurant %s',
-            table.pk, table.reward_id, table.reward.restaurant_id, gameplay.restaurant_id,
+            'Gameplay %s reward %s belongs to restaurant %s, not gameplay restaurant %s',
+            gameplay.pk, reward.pk, reward.restaurant_id, gameplay.restaurant_id,
         )
         return None
-    reward = eligible_rewards_for_gameplay(gameplay).filter(pk=table.reward_id).first()
+    if not reward.applicable_tables.filter(pk=table.pk).exists():
+        logger.error('Gameplay reward %s does not apply to table %s', reward.pk, table.pk)
+        return None
+    reward = eligible_rewards_for_gameplay(gameplay).filter(pk=reward.pk).first()
     if reward is None:
         logger.warning(
-            'Table reward %s is not eligible for gameplay %s on %s',
-            table.reward_id, gameplay.pk, gameplay.play_date,
+            'Assigned reward %s is not eligible for gameplay %s on %s',
+            gameplay.assigned_reward_id, gameplay.pk, gameplay.play_date,
         )
         return None
     if not reward_redemption_limits_allow_coupon(reward, gameplay.play_date):
-        logger.warning('Table reward %s has reached a configured redemption limit', reward.pk)
+        logger.warning('Assigned reward %s has reached a configured redemption limit', reward.pk)
         return None
 
     # create coupon
